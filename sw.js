@@ -1,5 +1,5 @@
 // Bump VERSION whenever any file changes so phones pick up the new copy.
-const VERSION = "kumkwa-v4";
+const VERSION = "kumkwa-v5";
 const APP = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {

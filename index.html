@@ -132,13 +132,14 @@ h1 .gem { width: 26px; height: 26px; border-radius: 9px; background: conic-gradi
 .row.best::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
   background: conic-gradient(from 120deg, var(--dot-a), var(--dot-b), #ffc58f, var(--dot-a));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-.row-main { display: flex; align-items: center; gap: 10px; }
-.letter { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 500; font-size: 1.05rem; color: var(--fg); background: var(--glass-strong); border: 1px solid var(--hair); }
+.row-head { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+.letter { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 500; font-size: 1.05rem; color: var(--fg); background: var(--glass-strong); border: 1px solid var(--hair); }
 .row.best .letter { background: var(--accent); color: var(--on-ink); border-color: transparent; box-shadow: 0 0 0 5px var(--accent-soft); }
-.pair { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 8px; }
-.field { flex: 1 1 7.5em; min-width: 0; display: flex; flex-direction: column; gap: 0; padding: 6px 12px 4px; border-radius: 16px; background: var(--glass-strong); border: 1px solid var(--hair); cursor: text; }
+.pair { min-width: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.field { flex: 1.4 1 6.2em; min-width: 0; display: flex; flex-direction: column; gap: 0; padding: 6px 12px 4px; border-radius: 16px; background: var(--glass-strong); border: 1px solid var(--hair); cursor: text; }
 .field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.field.dim { opacity: .5; }
+.field.count { flex: .7 1 3.2em; }
+.field.price { flex: 1.2 1 5em; }
 .field.bad { border-color: var(--warn); }
 .cap { font-size: .72rem; color: var(--muted); letter-spacing: .02em; }
 .fwrap { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
@@ -149,20 +150,20 @@ h1 .gem { width: 26px; height: 26px; border-radius: 9px; background: conic-gradi
 .del:hover { background: var(--accent-soft); color: var(--warn); }
 .del:disabled { visibility: hidden; }
 
-.row-sub { display: flex; flex-direction: column; gap: 8px; padding-left: 50px; }
+.row-sub { display: flex; flex-direction: column; gap: 8px; }
 .pill { font: inherit; font-size: .85rem; font-weight: 500; min-height: 36px; padding: 0 14px; border-radius: 999px; cursor: pointer; color: var(--fg); background: var(--glass-strong); border: 1px solid var(--hair); }
 .promo-btn { align-self: flex-start; }
 .promo { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); flex-wrap: wrap; border-radius: 18px; padding: 10px; background: var(--accent-soft); }
 .promo input, .promo select { font: inherit; font-size: 1rem; min-height: 40px; padding: 0 10px; border-radius: 12px; border: 1px solid var(--hair); background: var(--glass-strong); color: var(--fg); }
 .promo input { width: 64px; text-align: center; }
 .promo input:focus, .promo select:focus { outline: none; border-color: var(--accent); }
-.promo select[data-p="type"], .promo select[data-p="basis"] { flex: 1 1 100%; }
+.promo select[data-p="type"] { flex: 1 1 100%; }
 .promo .x { font: inherit; font-size: .85rem; color: var(--muted); background: none; border: none; text-decoration: underline; cursor: pointer; min-height: 44px; padding: 0 6px; }
-.info { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .summary { font-size: .86rem; color: var(--muted); min-width: 0; }
 .summary:empty { display: none; }
 .summary.err, .summary.more { color: var(--warn); }
 .unitprice { font-size: .86rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--fg); padding: 3px 12px; border-radius: 999px; background: var(--glass-strong); border: 1px solid var(--hair); margin-left: auto; white-space: nowrap; }
+.unitprice:empty + .del { margin-left: auto; }
 .unitprice:empty { display: none; }
 .row.best .unitprice { background: var(--tag); color: var(--tag-fg); border-color: transparent; font-weight: 600; }
 
@@ -198,9 +199,10 @@ button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); o
   <div class="help glass" id="help" hidden>
     <strong>ใส่ขนาดกับราคา แล้วดูผลด้านบนได้เลย</strong>
     <ul>
-      <li><b>ขนาด</b> คือปริมาณต่อชิ้น เช่น 225 (ml), 500 (g) หรือ 6 (ม้วน)</li>
-      <li><b>ราคา</b> คือราคาต่อชิ้นตามป้าย</li>
-      <li>มีโปรหรือซื้อหลายชิ้น กด <b>+ โปร / ซื้อหลายชิ้น</b> เลือกแบบโปร แล้วเช็กบรรทัด "จ่ายรวม…" ว่าตรงกับที่จะจ่ายจริง</li>
+      <li><b>ขนาด/ชิ้น</b> คือปริมาณของ 1 ชิ้น เช่น ขวด 0.5 L, ถุง 500 g</li>
+      <li><b>จำนวน</b> คือได้กี่ชิ้นทั้งหมด รวมของแถมแล้ว เช่น แพ็ค 13 แถม 2 ใส่ 15 (ไม่ใส่ = 1)</li>
+      <li><b>ราคารวม</b> คือเงินที่จ่ายสำหรับจำนวนนั้นทั้งหมด</li>
+      <li>มีส่วนลดหน้าร้าน เช่น ลด 10%, ลด 20 บาท, ชิ้นที่ 2 ลด 50% กด <b>+ ส่วนลด</b></li>
       <li>เลือก g/kg หรือ ml/L เมื่อต้องเทียบต่างหน่วย เช่น ขวด 1.5 L กับกล่อง 225 ml</li>
       <li>กด "ถัดไป" บนคีย์บอร์ดเพื่อข้ามไปช่องต่อไป</li>
     </ul>
@@ -234,36 +236,50 @@ const MODES = {
   volume: { units: [["ml", 1], ["L", 1000]], per: 100, perLabel: "100 ml" },
 };
 const PROMOS = {
-  free:   "ซื้อ…แถม…",
-  bundle: "เหมา…ชิ้น ราคา…",
-  nth:    "ชิ้นที่…ลด…%",
-  off:    "ลด…บาท",
+  pct: "ลด…%",
+  off: "ลด…บาท",
+  nth: "ชิ้นที่…ลด…%",
 };
 const LETTERS = "ABCDEFGH";
 const MAX = 8;
-const KEY = "kumkwa-v3";
+const KEY = "kumkwa-v4";
 const THINK_MS = 450;
-const blank = unit => ({ size: "", price: "", unit, promo: null });
-const newPromo = type => ({ type, n: "", m: "", x: "", basis: "unit" });
+const blank = unit => ({ size: "", count: "", price: "", unit, promo: null });
+const newPromo = type => ({ type, n: "", x: "" });
 const RESUME_AFTER_MS = 30 * 60 * 1000;  // back from the background after this long = fresh start
+const blankStr = s => String(s ?? "").trim() === "";
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// Older versions kept the price per piece plus a buy/free promo; turn those into count + total price
+function fromV3(it) {
+  const p = it.promo, num = s => parseNum(s), str = n => isFinite(n) ? String(+n.toFixed(2)) : "";
+  const out = { size: it.size, count: "", price: it.price, unit: it.unit, promo: null };
+  if (!p) return out;
+  if (p.type === "free") {
+    const n = blankStr(p.n) ? 1 : num(p.n), f = blankStr(p.m) ? 0 : num(p.m);
+    out.count = str(n + f);
+    out.price = p.basis === "total" ? it.price : str(num(it.price) * n);
+  } else if (p.type === "bundle") { out.count = blankStr(p.n) ? "2" : p.n; out.price = p.x; }
+  else if (p.type === "nth") { const n = blankStr(p.n) ? 2 : num(p.n); out.count = str(n); out.price = str(num(it.price) * n); out.promo = { type: "nth", n: p.n, x: p.x }; }
+  else if (p.type === "off") out.promo = { type: "off", n: "", x: p.x };
+  return out;
+}
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
     if (s && Array.isArray(s.items) && MODES[s.mode]) return s;
-    // carry over data from the previous version (promo was buy/free with a total price)
-    const old = JSON.parse(localStorage.getItem("kumkwa-v2"));
-    if (old && Array.isArray(old.items) && MODES[old.mode]) {
-      old.items = old.items.map(it => ({ size: it.size, price: it.price, unit: it.unit,
-        promo: it.promo ? { type: "free", n: it.buy || "", m: it.free || "", x: "", basis: "total" } : null }));
-      return old;
+    let old = JSON.parse(localStorage.getItem("kumkwa-v3"));
+    if (!old) {
+      old = JSON.parse(localStorage.getItem("kumkwa-v2"));
+      if (old && Array.isArray(old.items)) old.items = old.items.map(it => ({ size: it.size, price: it.price, unit: it.unit,
+        promo: it.promo ? { type: "free", n: it.buy || "", m: it.free || "", basis: "total" } : null }));
     }
+    if (old && Array.isArray(old.items) && MODES[old.mode]) return { mode: old.mode, items: old.items.map(fromV3) };
   } catch (e) {}
   return null;
 }
 const fresh = mode => { const u = MODES[mode].units[0][0]; return { mode, items: [blank(u), blank(u)] }; };
-const hasData = s => !!s && s.items.some(it => !blankStr(it.size) || !blankStr(it.price));
+const hasData = s => !!s && s.items.some(it => !blankStr(it.size) || !blankStr(it.count) || !blankStr(it.price));
 let lastSession = load();
 let savedMode = null;
 try { savedMode = localStorage.getItem(KEY + "-mode"); } catch (e) {}
@@ -276,7 +292,6 @@ const save = () => { try {
   if (hasData(state)) localStorage.setItem(KEY, JSON.stringify(state));
 } catch (e) {} };
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const blankStr = s => String(s ?? "").trim() === "";
 
 // Accepts "1,299.50", "35,99" (comma decimal) and stray spaces. Returns NaN when unusable.
 function parseNum(s) {
@@ -302,40 +317,43 @@ function fmtQty(q) {
   return q >= 1000 ? fmtN(q / 1000) + " " + b : fmtN(q) + " " + s;
 }
 
+// How many pieces: blank = 1; "13+2" also works when typed on a keyboard that has +
+function parseCount(s) {
+  if (blankStr(s)) return 1;
+  const parts = String(s).replace(/\s/g, "").split("+");
+  if (parts.some(x => !/^\d+$/.test(x))) return NaN;
+  return parts.reduce((a, x) => a + +x, 0);
+}
+
 // Returns { qty, total, count, unitPrice } or { err, field } or null (row still empty)
 function calc(it) {
   const m = MODES[state.mode];
   const factor = (m.units.find(u => u[0] === it.unit) || m.units[0])[1];
-  const size = parseNum(it.size), price = parseNum(it.price);
-  const p = it.promo;
-  const needPrice = !(p && p.type === "bundle");
-  if (blankStr(it.size) && blankStr(it.price)) return null;
-  if (!(size > 0)) return { err: blankStr(it.size) ? "ใส่ขนาด" : isNaN(size) ? "ขนาดไม่ถูกต้อง" : "ขนาดต้องมากกว่า 0", field: "size" };
-  if (needPrice && !(price > 0)) return { err: blankStr(it.price) ? "ใส่ราคา" : isNaN(price) ? "ราคาไม่ถูกต้อง" : "ราคาต้องมากกว่า 0", field: "price" };
+  if (blankStr(it.size) && blankStr(it.count) && blankStr(it.price)) return null;
+  // without units, a blank size just means "count the pieces"
+  const size = blankStr(it.size) && state.mode === "plain" ? 1 : parseNum(it.size);
+  const count = parseCount(it.count), price = parseNum(it.price);
+  if (!(size > 0)) return { err: blankStr(it.size) ? "ใส่ขนาดต่อชิ้น" : isNaN(size) ? "ขนาดไม่ถูกต้อง" : "ขนาดต้องมากกว่า 0", field: "size" };
+  if (!(count >= 1)) return { err: "จำนวนต้องเป็นเลขจำนวนเต็ม ตั้งแต่ 1 ขึ้นไป", field: "count" };
+  if (!(price > 0)) return { err: blankStr(it.price) ? "ใส่ราคารวม" : isNaN(price) ? "ราคาไม่ถูกต้อง" : "ราคาต้องมากกว่า 0", field: "price" };
 
-  let count = 1, total = price;
-  if (p) {
-    if (p.type === "free") {
-      const n = numOr(p.n, 1), f = numOr(p.m, 0);
-      if (!(n >= 1) || !(f >= 0) || n % 1 || f % 1) return { err: "จำนวนซื้อ/แถมต้องเป็นจำนวนเต็ม" };
-      count = n + f;
-      total = p.basis === "total" ? price : price * n;
-    } else if (p.type === "bundle") {
-      const n = numOr(p.n, 2), x = parseNum(p.x);
-      if (!(n >= 1) || n % 1) return { err: "จำนวนชิ้นต้องเป็นจำนวนเต็ม" };
-      if (!(x > 0)) return { err: blankStr(p.x) ? "ใส่ราคาเหมา" : "ราคาเหมาไม่ถูกต้อง" };
-      count = n; total = x;
-    } else if (p.type === "nth") {
-      const n = numOr(p.n, 2), d = numOr(p.x, 50);
-      if (!(n >= 2) || n % 1) return { err: "ชิ้นที่ลดต้องเป็น 2 ขึ้นไป" };
-      if (!(d > 0 && d <= 100)) return { err: "ส่วนลดต้องอยู่ระหว่าง 1–100%" };
-      count = n; total = price * (n - 1) + price * (1 - d / 100);
-    } else if (p.type === "off") {
-      const x = parseNum(p.x);
-      if (!(x > 0)) return { err: blankStr(p.x) ? "ใส่ส่วนลดเป็นบาท" : "ส่วนลดไม่ถูกต้อง" };
-      if (x >= price) return { err: "ส่วนลดมากกว่าราคา" };
-      total = price - x;
-    }
+  let total = price;
+  const p = it.promo;
+  if (p && p.type === "pct") {
+    const d = parseNum(p.x);
+    if (!(d > 0 && d < 100)) return { err: blankStr(p.x) ? "ใส่กี่ % ที่ลด" : "ส่วนลดต้องอยู่ระหว่าง 1–99%" };
+    total = price * (1 - d / 100);
+  } else if (p && p.type === "off") {
+    const x = parseNum(p.x);
+    if (!(x > 0)) return { err: blankStr(p.x) ? "ใส่ส่วนลดเป็นบาท" : "ส่วนลดไม่ถูกต้อง" };
+    if (x >= price) return { err: "ส่วนลดมากกว่าราคา" };
+    total = price - x;
+  } else if (p && p.type === "nth") {
+    const n = numOr(p.n, 2), d = numOr(p.x, 50);
+    if (!(n >= 2) || n % 1) return { err: "ชิ้นที่ลดต้องเป็น 2 ขึ้นไป" };
+    if (!(d > 0 && d <= 100)) return { err: "ส่วนลดต้องอยู่ระหว่าง 1–100%" };
+    if (count < n) return { err: `ต้องซื้ออย่างน้อย ${n} ชิ้นถึงได้ส่วนลด`, field: "count" };
+    total = price - Math.floor(count / n) * (price / count) * d / 100;
   }
   const qty = size * factor * count;
   return { qty, total, count, unitPrice: total / qty * m.per };
@@ -397,15 +415,13 @@ const orb = (() => {
 })();
 
 function promoEditor(p, i, L) {
-  const typeSel = `<select id="ptype-${i}" aria-label="ชนิดโปรของ ${L}" data-p="type">${Object.entries(PROMOS).map(([k, v]) => `<option value="${k}"${k === p.type ? " selected" : ""}>${v}</option>`).join("")}</select>`;
+  const typeSel = `<select id="ptype-${i}" aria-label="ชนิดส่วนลดของ ${L}" data-p="type">${Object.entries(PROMOS).map(([k, v]) => `<option value="${k}"${k === p.type ? " selected" : ""}>${v}</option>`).join("")}</select>`;
   const inp = (k, ph, label) => `<input id="p${k}-${i}" aria-label="${label} (${L})" inputmode="decimal" enterkeyhint="next" autocomplete="off" placeholder="${ph}" data-p="${k}" value="${esc(p[k])}" aria-describedby="sum-${i}">`;
   let f = "";
-  if (p.type === "free") f = `ซื้อ ${inp("n", "1", "จำนวนซื้อ")} แถม ${inp("m", "0", "จำนวนแถม")}
-      <select id="pbasis-${i}" aria-label="ราคาที่ใส่คือ (${L})" data-p="basis"><option value="unit"${p.basis !== "total" ? " selected" : ""}>ราคาที่ใส่ = ต่อชิ้น</option><option value="total"${p.basis === "total" ? " selected" : ""}>ราคาที่ใส่ = รวมทั้งหมด</option></select>`;
-  if (p.type === "bundle") f = `${inp("n", "2", "จำนวนชิ้น")} ชิ้น ราคา ${inp("x", "99", "ราคาเหมา")} บาท`;
+  if (p.type === "pct") f = `ลด ${inp("x", "10", "เปอร์เซ็นต์ส่วนลด")} % จากราคารวม`;
+  if (p.type === "off") f = `ลด ${inp("x", "20", "ส่วนลดเป็นบาท")} บาท จากราคารวม`;
   if (p.type === "nth") f = `ชิ้นที่ ${inp("n", "2", "ชิ้นที่ลด")} ลด ${inp("x", "50", "เปอร์เซ็นต์ส่วนลด")} %`;
-  if (p.type === "off") f = `ลด ${inp("x", "20", "ส่วนลดเป็นบาท")} บาท`;
-  return `<div class="promo">${typeSel} ${f}<button class="x" type="button" data-act="nopromo">ยกเลิกโปร<span class="sr"> ของ ${L}</span></button></div>`;
+  return `<div class="promo">${typeSel} ${f}<button class="x" type="button" data-act="nopromo">ไม่มีส่วนลด<span class="sr"> (${L})</span></button></div>`;
 }
 
 function render() {
@@ -417,26 +433,28 @@ function render() {
     const L = LETTERS[i];
     const unitSel = state.mode === "plain" ? "" :
       `<select id="unit-${i}" aria-label="หน่วยของ ${L}" data-k="unit">${m.units.map(u => `<option${u[0] === it.unit ? " selected" : ""}>${u[0]}</option>`).join("")}</select>`;
-    const bundle = it.promo && it.promo.type === "bundle";
     const el = document.createElement("div");
     el.className = "row glass";
     el.dataset.i = i;
     el.setAttribute("role", "group");
     el.setAttribute("aria-label", `ตัวเลือก ${L}`);
     el.innerHTML = `
-      <div class="row-main">
+      <div class="row-head">
         <div class="letter">${L}<span class="sr best-sr"></span></div>
-        <div class="pair">
-          <label class="field" for="size-${i}"><span class="cap">ขนาด</span>
-            <span class="fwrap"><input class="num" id="size-${i}" aria-label="ขนาดของ ${L}" aria-describedby="sum-${i}" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-k="size" value="${esc(it.size)}" placeholder="เช่น 225">${unitSel}</span></label>
-          <label class="field${bundle ? " dim" : ""}" for="price-${i}"><span class="cap">${bundle ? "ราคาปกติ (ไม่ต้องใส่)" : "ราคา (บาท)"}</span>
-            <span class="fwrap"><input class="num" id="price-${i}" aria-label="ราคาของ ${L}" aria-describedby="sum-${i}" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-k="price" value="${esc(it.price)}" placeholder="฿"></span></label>
-        </div>
+        <span class="unitprice"></span>
         <button class="del hit" type="button" aria-label="ลบตัวเลือก ${L}" ${state.items.length <= 2 ? "disabled" : ""}>×</button>
       </div>
+      <div class="pair">
+          <label class="field" for="size-${i}"><span class="cap">ขนาด/ชิ้น</span>
+            <span class="fwrap"><input class="num" id="size-${i}" aria-label="ขนาดต่อชิ้นของ ${L}" aria-describedby="sum-${i}" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-k="size" value="${esc(it.size)}" placeholder="${state.mode === "volume" ? "0.5" : state.mode === "weight" ? "500" : "1"}">${unitSel}</span></label>
+          <label class="field count" for="count-${i}"><span class="cap">จำนวน</span>
+            <span class="fwrap"><input class="num" id="count-${i}" aria-label="จำนวนชิ้นของ ${L}" aria-describedby="sum-${i}" inputmode="numeric" enterkeyhint="next" autocomplete="off" data-k="count" value="${esc(it.count)}" placeholder="1"></span></label>
+          <label class="field price" for="price-${i}"><span class="cap">ราคารวม</span>
+            <span class="fwrap"><input class="num" id="price-${i}" aria-label="ราคารวมของ ${L} (บาท)" aria-describedby="sum-${i}" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-k="price" value="${esc(it.price)}" placeholder="฿"></span></label>
+        </div>
       <div class="row-sub">
-        ${it.promo ? promoEditor(it.promo, i, L) : `<button class="pill promo-btn hit" type="button" data-act="promo">+ โปร / ซื้อหลายชิ้น<span class="sr"> ของ ${L}</span></button>`}
-        <div class="info"><span class="summary" id="sum-${i}"></span><span class="unitprice"></span></div>
+        <span class="summary" id="sum-${i}"></span>
+        ${it.promo ? promoEditor(it.promo, i, L) : `<button class="pill promo-btn hit" type="button" data-act="promo">+ ส่วนลด<span class="sr"> ของ ${L}</span></button>`}
       </div>`;
     list.appendChild(el);
   });
@@ -461,7 +479,7 @@ function update(instant) {
     el.classList.toggle("best", isBest);
     el.querySelector(".best-sr").textContent = isBest ? " คุ้มที่สุด" : "";
     el.querySelector(".unitprice").textContent = r && !r.err ? `฿${fmtMoney(r.unitPrice)} / ${m.perLabel}` : "";
-    for (const f of ["size", "price"]) {
+    for (const f of ["size", "count", "price"]) {
       const bad = !!(r && r.err && r.field === f);
       const inp = el.querySelector(`[data-k="${f}"]`);
       inp.setAttribute("aria-invalid", bad);
@@ -472,7 +490,9 @@ function update(instant) {
     if (!r) { s.textContent = ""; return; }
     if (r.err) { s.textContent = r.err; s.classList.add("err"); return; }
     const parts = [];
-    if (it.promo) parts.push(`จ่ายรวม ${fmtBaht(r.total)} ได้ ${fmtN(r.count)} ชิ้น` + (state.mode === "plain" ? "" : ` (${fmtQty(r.qty)})`));
+    if (r.count > 1 && state.mode !== "plain") parts.push(`รวม ${fmtQty(r.qty)}`);
+    if (it.promo) parts.push(`จ่ายจริง ${fmtBaht(r.total)}`);
+    if (r.count > 1) parts.push(`ชิ้นละ ${fmtBaht(r.total / r.count)}`);
     if (decisive && !isBest) {
       parts.push(`แพงกว่า ${LETTERS[best.i]} ${fmtBaht(r.total - best.unitPrice / m.per * r.qty)}`);
       s.classList.add("more");
@@ -536,7 +556,6 @@ $("#list").addEventListener("change", e => {
   const row = e.target.closest(".row"); if (!row) return;
   const i = +row.dataset.i, it = state.items[i];
   if (e.target.dataset.k === "unit") { it.unit = e.target.value; update(); }
-  if (e.target.dataset.p === "basis") { it.promo.basis = e.target.value; update(); }
   if (e.target.dataset.p === "type") { it.promo = newPromo(e.target.value); render(); document.getElementById(`ptype-${i}`).focus(); }
 });
 $("#list").addEventListener("click", e => {
@@ -548,7 +567,7 @@ $("#list").addEventListener("click", e => {
     state.items.splice(i, 1); render(); return;
   }
   const act = btn.dataset.act;
-  if (act === "promo") { state.items[i].promo = newPromo("free"); render(); document.getElementById(`pn-${i}`).focus(); }
+  if (act === "promo") { state.items[i].promo = newPromo("pct"); render(); document.getElementById(`px-${i}`).focus(); }
   if (act === "nopromo") { state.items[i].promo = null; render(); }
 });
 // "Next" on the phone keyboard jumps to the next box in reading order
