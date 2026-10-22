@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="เทียบราคาต่อหน่วย ดูว่าสินค้าแบบไหนคุ้มกว่า">
-<meta name="theme-color" content="#f4f1ff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1d1929" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#eceef8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0e15" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -13,160 +13,189 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<style>
-:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); -webkit-text-size-adjust: 100%; }
-body { margin: 0; }
-img { max-width: 100%; }
-[hidden] { display: none !important; }
-/* stop iOS zooming into inputs and double-tap zoom on buttons */
-input, select { font-size: max(16px, 1em); }
-button, input, select { touch-action: manipulation; }
-</style>
 <title>คุ้มกว่า</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Fredoka:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600&display=swap">
 <style>
-/* Layout: a pocket calculator that feels like a sticker sheet. Mascot price tag reacts in the result bubble; lettered rows wear colored round badges; the winner row turns mint with a yellow tag */
+/* Layout: frosted-glass cards floating over a pearl/iridescent field. The result card "thinks" with a dotted orb, then the little price-tag buddy answers. A thread connects the answer to the options below. */
 :root {
-  --bg: #f4f1ff;          /* soft lavender paper */
-  --surface: #ffffff;
-  --fg: #3a3152;          /* plum ink */
-  --muted: #847b9e;
-  --line: #e4ddf6;
-  --accent: #1f9d68;      /* mint win */
-  --accent-soft: #dcf6e9;
+  --bg: #eceef8;
+  --pearl-1: #c9d8ff;   /* sky */
+  --pearl-2: #f3c9e4;   /* pink */
+  --pearl-3: #ffe2c6;   /* peach */
+  --pearl-4: #d8ccff;   /* lilac */
+  --glass: rgba(255, 255, 255, .58);
+  --glass-strong: rgba(255, 255, 255, .82);
+  --glass-edge: rgba(255, 255, 255, .9);
+  --glass-shadow: 0 10px 30px rgba(60, 64, 110, .12), 0 1px 0 rgba(255, 255, 255, .8) inset;
+  --fg: #1c1d2b;
+  --muted: #545970;
+  --hair: rgba(28, 29, 43, .12);
+  --accent: #3451d1;        /* answer blue */
+  --accent-soft: rgba(52, 81, 209, .1);
+  --ink: #1c1d2b;           /* dark pill */
+  --on-ink: #ffffff;
   --tag: #ffd84a;
-  --tag-fg: #4a3500;
-  --pink: #ff8fb3;
-  --pink-soft: #ffe3ec;
-  --warn: #e0506a;
-  --warn-soft: #ffe6ea;
-  --shadow: #ddd5f3;
-  --b1: #ffd0de; --b2: #cfe4ff; --b3: #fff0b8; --b4: #d9f5e4; --b5: #e8dcff; --b6: #ffe0c7;
-  --font-display: "Mali", "IBM Plex Sans Thai", system-ui, sans-serif;
-  --font-body: "Mali", "IBM Plex Sans Thai", system-ui, sans-serif;
-  --font-num: "Fredoka", "Mali", ui-rounded, system-ui, sans-serif;
+  --tag-fg: #3d2c00;
+  --warn: #b8304a;
+  --dot-a: #5b78ff;
+  --dot-b: #ff7fbf;
+  --font: "Anuphan", "IBM Plex Sans Thai", system-ui, sans-serif;
+  color-scheme: light;
+  font: -apple-system-body;  /* follow the iPhone's text size setting */
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+  -webkit-text-size-adjust: 100%;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #1d1929; --surface: #2a2440; --fg: #f1ecff; --muted: #a79fc2; --line: #3d3557;
-  --accent: #5fdba2; --accent-soft: #1f3b31; --tag: #f5cf3f; --tag-fg: #2e2200; --pink: #ff8fb3; --pink-soft: #45263a;
-  --warn: #ff8496; --warn-soft: #482431; --shadow: #15121f;
-  --b1: #5a2d40; --b2: #263f63; --b3: #574a1c; --b4: #234a36; --b5: #3e3266; --b6: #5a3a24;
+  --bg: #0d0e15; --pearl-1: #24306b; --pearl-2: #4a2346; --pearl-3: #4a3524; --pearl-4: #2e2560;
+  --glass: rgba(30, 32, 48, .58); --glass-strong: rgba(36, 38, 56, .86); --glass-edge: rgba(255, 255, 255, .1);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, .4), 0 1px 0 rgba(255, 255, 255, .06) inset;
+  --fg: #eef0ff; --muted: #a9aecb; --hair: rgba(255, 255, 255, .12);
+  --accent: #9fb0ff; --accent-soft: rgba(159, 176, 255, .14); --ink: #eef0ff; --on-ink: #11121b;
+  --tag: #f5cf3f; --tag-fg: #2e2200; --warn: #ff8fa2; --dot-a: #8ea2ff; --dot-b: #ff9fd0;
   color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #1d1929; --surface: #2a2440; --fg: #f1ecff; --muted: #a79fc2; --line: #3d3557;
-  --accent: #5fdba2; --accent-soft: #1f3b31; --tag: #f5cf3f; --tag-fg: #2e2200; --pink: #ff8fb3; --pink-soft: #45263a;
-  --warn: #ff8496; --warn-soft: #482431; --shadow: #15121f;
-  --b1: #5a2d40; --b2: #263f63; --b3: #574a1c; --b4: #234a36; --b5: #3e3266; --b6: #5a3a24;
+  --bg: #0d0e15; --pearl-1: #24306b; --pearl-2: #4a2346; --pearl-3: #4a3524; --pearl-4: #2e2560;
+  --glass: rgba(30, 32, 48, .58); --glass-strong: rgba(36, 38, 56, .86); --glass-edge: rgba(255, 255, 255, .1);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, .4), 0 1px 0 rgba(255, 255, 255, .06) inset;
+  --fg: #eef0ff; --muted: #a9aecb; --hair: rgba(255, 255, 255, .12);
+  --accent: #9fb0ff; --accent-soft: rgba(159, 176, 255, .14); --ink: #eef0ff; --on-ink: #11121b;
+  --tag: #f5cf3f; --tag-fg: #2e2200; --warn: #ff8fa2; --dot-a: #8ea2ff; --dot-b: #ff9fd0;
   color-scheme: dark; }
 
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55;
-  background-image: radial-gradient(var(--line) 1.2px, transparent 1.2px); background-size: 22px 22px; }
-.wrap { max-width: 560px; margin: 0 auto; padding-block: 18px 96px;
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--fg); font-family: var(--font); font-size: .94rem; line-height: 1.55; font-weight: 400; }
+/* pearl field: soft colour blobs behind the glass */
+body::after { content: ""; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(40% 30% at 20% 18%, var(--pearl-1), transparent 70%),
+    radial-gradient(35% 28% at 85% 30%, var(--pearl-2), transparent 70%),
+    radial-gradient(40% 30% at 70% 85%, var(--pearl-3), transparent 70%),
+    radial-gradient(45% 35% at 15% 75%, var(--pearl-4), transparent 70%);
+  filter: blur(30px); animation: drift 24s ease-in-out infinite alternate; }
+@keyframes drift { to { transform: translate3d(-3%, 2%, 0) rotate(6deg); } }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.glass { background: var(--glass); -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+  border: 1px solid var(--glass-edge); box-shadow: var(--glass-shadow); }
+/* bigger invisible touch area for small-looking controls */
+.hit { position: relative; }
+.hit::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+
+.wrap { max-width: 560px; margin: 0 auto; padding-block: 14px 110px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: flex; flex-direction: column; gap: 14px; }
 
-.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-h1 { font-family: var(--font-display); font-weight: 700; font-size: 1.85rem; line-height: 1; margin: 0; display: flex; align-items: center; gap: 8px; }
-h1 .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--pink); box-shadow: 16px 0 0 var(--tag), 32px 0 0 var(--accent); margin-right: 32px; }
-.link { font: inherit; font-weight: 600; background: var(--surface); border: 2px solid var(--line); color: var(--muted); cursor: pointer; padding: 4px 12px; border-radius: 999px; margin-left: 6px; }
-.link:hover { color: var(--fg); border-color: var(--pink); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-weight: 500; font-size: 1.75rem; letter-spacing: -.01em; line-height: 1.1; margin: 0; display: flex; align-items: center; gap: 10px; }
+h1 .gem { width: 26px; height: 26px; border-radius: 9px; background: conic-gradient(from 200deg, var(--dot-a), var(--dot-b), #ffc58f, var(--dot-a)); box-shadow: 0 0 0 3px var(--glass-edge); transform: rotate(-10deg); flex: none; }
+.top-actions { display: flex; gap: 6px; }
+.link { font: inherit; font-size: .9rem; font-weight: 500; min-height: 44px; padding: 0 16px; border-radius: 999px; color: var(--fg); cursor: pointer; }
 
-.mode { display: flex; gap: 6px; flex-wrap: wrap; background: var(--surface); padding: 5px; border-radius: 999px; border: 2px solid var(--line); align-self: flex-start; max-width: 100%; }
-.mode button { font: inherit; font-weight: 600; font-size: .9rem; padding: 6px 14px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; }
-.mode button[aria-pressed="true"] { background: var(--pink); color: #fff; box-shadow: 0 2px 0 #e76d96; }
+.mode { display: flex; gap: 4px; flex-wrap: wrap; padding: 4px; border-radius: 999px; align-self: flex-start; max-width: 100%; }
+.mode button { font: inherit; font-size: .9rem; font-weight: 500; min-height: 40px; padding: 0 16px; border-radius: 999px; border: none; background: transparent; color: var(--muted); cursor: pointer; }
+.mode button[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
 
-.verdict { min-height: 104px; border-radius: 26px; padding: 14px 18px 14px 12px; background: var(--surface); border: 2px solid var(--line);
-  box-shadow: 0 5px 0 var(--shadow); display: flex; align-items: center; gap: 12px; }
-.verdict.win { background: var(--accent-soft); border-color: var(--accent); box-shadow: 0 5px 0 color-mix(in srgb, var(--accent) 45%, transparent); }
-.mascot { flex: 0 0 76px; width: 76px; height: 76px; }
-.mascot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+/* result card */
+.verdict { border-radius: 28px; padding: 16px 18px 16px 14px; display: flex; align-items: center; gap: 14px; min-height: 112px; }
+.visual { position: relative; flex: 0 0 72px; width: 72px; height: 72px; }
+.visual canvas, .visual .mascot { position: absolute; inset: 0; width: 100%; height: 100%; transition: opacity .35s, transform .35s; }
+.visual .mascot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.verdict:not(.thinking):not(.idle) canvas { opacity: 0; transform: scale(.6); }
+.verdict.thinking .mascot, .verdict.idle .mascot { opacity: 0; transform: scale(.6); }
 .verdict.pop .mascot { animation: pop .55s cubic-bezier(.3, 1.6, .5, 1); }
-@keyframes pop { 0% { transform: scale(.6) rotate(-14deg); } 60% { transform: scale(1.12) rotate(6deg); } 100% { transform: none; } }
+@keyframes pop { 0% { transform: scale(.5) rotate(-14deg); } 60% { transform: scale(1.1) rotate(5deg); } 100% { transform: none; } }
 .mascot .blink { animation: blink 4s infinite; transform-origin: center; transform-box: fill-box; }
 @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
-.vtext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.verdict .big { font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; line-height: 1.3; text-wrap: balance; }
+.vtext { display: flex; flex-direction: column; gap: 4px; min-width: 0; transition: opacity .25s, filter .25s; }
+.verdict.thinking .vtext { opacity: .35; filter: blur(2px); }
+.eyebrow { font-size: .78rem; letter-spacing: .04em; color: var(--muted); }
+.big { font-weight: 500; font-size: 1.35rem; line-height: 1.3; letter-spacing: -.005em; text-wrap: balance; }
 .verdict.win .big { color: var(--accent); }
-.verdict .sub { color: var(--muted); font-size: .9rem; }
-.verdict .save { color: var(--fg); font-size: .95rem; }
-.verdict .save b { font-family: var(--font-num); font-weight: 600; background: var(--tag); color: var(--tag-fg); padding: 0 8px; border-radius: 8px; }
-.alert { background: var(--warn-soft); color: var(--fg); border-radius: 18px; padding: 10px 14px; font-size: .88rem; border: 2px dashed var(--warn); }
-.alert b { color: var(--warn); }
+.save { color: var(--fg); font-size: .92rem; font-weight: 300; }
+.save b { font-weight: 600; background: var(--tag); color: var(--tag-fg); padding: 1px 9px; border-radius: 999px; white-space: nowrap; }
+.sub { color: var(--muted); font-size: .9rem; font-weight: 300; }
 
-.colhead, .row-main { display: grid; grid-template-columns: 38px minmax(0, 1fr) minmax(0, 1fr) 30px; gap: 8px; align-items: center; }
-.colhead { font-size: .8rem; font-weight: 600; color: var(--muted); padding: 0 12px; margin-bottom: -6px; }
-.colhead span { text-align: center; }
+/* the thread from the answer down to the options */
+.thread { height: 26px; margin: -14px 0; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+.thread::before { content: ""; width: 1px; flex: 1; background: linear-gradient(var(--hair), var(--accent)); }
+.thread::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 
-.list { display: flex; flex-direction: column; gap: 12px; }
-.row { background: var(--surface); border: 2px solid var(--line); border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
-  box-shadow: 0 4px 0 var(--shadow); transition: background .2s, border-color .2s, transform .2s; }
-.row.best { background: var(--accent-soft); border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 0 color-mix(in srgb, var(--accent) 45%, transparent); }
-.letter { font-family: var(--font-num); font-weight: 600; font-size: 1.3rem; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--fg); background: var(--b1); position: relative; }
-.row:nth-child(6n+2) .letter { background: var(--b2); }
-.row:nth-child(6n+3) .letter { background: var(--b3); }
-.row:nth-child(6n+4) .letter { background: var(--b4); }
-.row:nth-child(6n+5) .letter { background: var(--b5); }
-.row:nth-child(6n+6) .letter { background: var(--b6); }
-.row.best .letter { background: var(--accent); color: var(--surface); }
-.row.best .letter::after { content: ""; position: absolute; top: -13px; left: 50%; width: 22px; height: 12px; transform: translateX(-50%);
-  background: var(--tag); clip-path: polygon(0 100%, 0 20%, 25% 60%, 50% 0, 75% 60%, 100% 20%, 100% 100%); }
+.alert { border-radius: 18px; padding: 12px 16px; font-size: .88rem; color: var(--fg); border-color: var(--warn); }
+.alert b { color: var(--warn); font-weight: 600; }
 
-.num-wrap { display: flex; align-items: center; background: var(--bg); border: 2px solid var(--line); border-radius: 16px; min-width: 0; }
-.num-wrap:focus-within { border-color: var(--pink); box-shadow: 0 0 0 3px var(--pink-soft); }
-.row.best .num-wrap { background: var(--surface); }
-.num-wrap.dim { opacity: .45; }
-.num { font-family: var(--font-num); font-weight: 500; font-size: 1.35rem; font-variant-numeric: tabular-nums; text-align: center; width: 100%; min-width: 0; border: none; background: transparent; color: var(--fg); padding: 8px 4px; outline: none; }
-.num::placeholder { color: var(--muted); opacity: .6; font-size: .9rem; }
-.num-wrap select { font: inherit; font-size: 1rem; border: none; background: transparent; color: var(--muted); padding: 0 6px 0 0; }
-.affix { color: var(--muted); font-size: .9rem; padding-left: 10px; }
-
-.del { border: none; background: var(--bg); color: var(--muted); cursor: pointer; font-size: 1.1rem; line-height: 1; width: 30px; height: 30px; border-radius: 50%; }
-.del:hover { color: var(--warn); background: var(--warn-soft); }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.row { border-radius: 24px; padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; transition: transform .25s; }
+.row.best { transform: translateY(-1px); background: var(--glass-strong); }
+.row.best::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from 120deg, var(--dot-a), var(--dot-b), #ffc58f, var(--dot-a));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.row-main { display: flex; align-items: center; gap: 10px; }
+.letter { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 500; font-size: 1.05rem; color: var(--fg); background: var(--glass-strong); border: 1px solid var(--hair); }
+.row.best .letter { background: var(--accent); color: var(--on-ink); border-color: transparent; box-shadow: 0 0 0 5px var(--accent-soft); }
+.pair { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.field { flex: 1 1 7.5em; min-width: 0; display: flex; flex-direction: column; gap: 0; padding: 6px 12px 4px; border-radius: 16px; background: var(--glass-strong); border: 1px solid var(--hair); cursor: text; }
+.field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.field.dim { opacity: .5; }
+.field.bad { border-color: var(--warn); }
+.cap { font-size: .72rem; color: var(--muted); letter-spacing: .02em; }
+.fwrap { display: flex; align-items: baseline; gap: 4px; min-width: 0; }
+.num { font: inherit; font-size: 1.35rem; font-weight: 500; font-variant-numeric: tabular-nums; width: 100%; min-width: 0; border: none; background: transparent; color: var(--fg); padding: 0; outline: none; }
+.num::placeholder { color: var(--muted); font-weight: 300; font-size: 1rem; }
+.fwrap select { font: inherit; font-size: 1rem; border: none; background: transparent; color: var(--muted); padding: 0; }
+.del { flex: none; border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 1.2rem; width: 36px; height: 36px; border-radius: 50%; }
+.del:hover { background: var(--accent-soft); color: var(--warn); }
 .del:disabled { visibility: hidden; }
 
-.row-sub { display: flex; flex-direction: column; gap: 6px; padding-left: 46px; }
-.promo-btn { align-self: flex-start; font: inherit; font-size: .85rem; font-weight: 600; color: var(--pink); background: var(--pink-soft); border: none; border-radius: 999px; padding: 4px 12px; cursor: pointer; }
-.promo-btn:hover { filter: brightness(.97); }
-.promo { display: flex; align-items: center; gap: 6px; font-size: .88rem; color: var(--muted); flex-wrap: wrap; background: var(--pink-soft); border-radius: 16px; padding: 8px 10px; }
-.promo input, .promo select { font: inherit; font-size: 1rem; padding: 3px 8px; border-radius: 12px; border: 2px solid transparent; background: var(--surface); color: var(--fg); }
-.promo input { font-family: var(--font-num); width: 58px; text-align: center; }
+.row-sub { display: flex; flex-direction: column; gap: 8px; padding-left: 50px; }
+.pill { font: inherit; font-size: .85rem; font-weight: 500; min-height: 36px; padding: 0 14px; border-radius: 999px; cursor: pointer; color: var(--fg); background: var(--glass-strong); border: 1px solid var(--hair); }
+.promo-btn { align-self: flex-start; }
+.promo { display: flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--muted); flex-wrap: wrap; border-radius: 18px; padding: 10px; background: var(--accent-soft); }
+.promo input, .promo select { font: inherit; font-size: 1rem; min-height: 40px; padding: 0 10px; border-radius: 12px; border: 1px solid var(--hair); background: var(--glass-strong); color: var(--fg); }
+.promo input { width: 64px; text-align: center; }
+.promo input:focus, .promo select:focus { outline: none; border-color: var(--accent); }
 .promo select[data-p="type"], .promo select[data-p="basis"] { flex: 1 1 100%; }
-.promo input:focus, .promo select:focus { outline: none; border-color: var(--pink); }
-.promo .x { border: none; background: none; color: var(--muted); cursor: pointer; font: inherit; font-size: .82rem; text-decoration: underline; padding: 2px 4px; }
+.promo .x { font: inherit; font-size: .85rem; color: var(--muted); background: none; border: none; text-decoration: underline; cursor: pointer; min-height: 44px; padding: 0 6px; }
 .info { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-.summary { font-size: .84rem; color: var(--muted); min-width: 0; }
-.summary.err { color: var(--warn); }
-.summary.more { color: var(--warn); }
-.unitprice { font-family: var(--font-num); font-weight: 500; font-variant-numeric: tabular-nums; font-size: .88rem; color: var(--muted); padding: 2px 10px; border-radius: 999px; background: var(--bg); margin-left: auto; white-space: nowrap; }
-.row.best .unitprice { background: var(--tag); color: var(--tag-fg); font-weight: 600; }
+.summary { font-size: .86rem; color: var(--muted); min-width: 0; }
+.summary:empty { display: none; }
+.summary.err, .summary.more { color: var(--warn); }
+.unitprice { font-size: .86rem; font-weight: 500; font-variant-numeric: tabular-nums; color: var(--fg); padding: 3px 12px; border-radius: 999px; background: var(--glass-strong); border: 1px solid var(--hair); margin-left: auto; white-space: nowrap; }
+.unitprice:empty { display: none; }
+.row.best .unitprice { background: var(--tag); color: var(--tag-fg); border-color: transparent; font-weight: 600; }
 
-.actions { display: flex; gap: 8px; }
-.btn { font: inherit; font-weight: 700; font-size: 1rem; padding: 12px 16px; border-radius: 999px; cursor: pointer; border: 2px dashed var(--pink); background: var(--surface); color: var(--pink); flex: 1; transition: transform .1s; }
-.btn:active { transform: translateY(2px); }
-.btn:disabled { opacity: .45; cursor: default; }
-button:focus-visible, select:focus-visible { outline: 3px solid var(--pink); outline-offset: 2px; }
+.add { font: inherit; font-size: 1rem; font-weight: 500; min-height: 52px; border-radius: 999px; cursor: pointer; color: var(--fg); width: 100%; }
+.add:disabled { opacity: .45; cursor: default; }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-.help { background: var(--surface); border: 2px solid var(--line); border-radius: 22px; padding: 12px 18px; font-size: .9rem; box-shadow: 0 4px 0 var(--shadow); }
+.help { border-radius: 22px; padding: 14px 18px; font-size: .9rem; }
 .help ul { margin: 6px 0 0; padding-left: 1.1em; display: grid; gap: 4px; }
-.foot { text-align: center; color: var(--muted); font-size: .8rem; }
+.foot { text-align: center; color: var(--muted); font-size: .8rem; font-weight: 300; }
 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  width: min(calc(100% - 32px), 420px); background: var(--fg); color: var(--bg); border-radius: 999px; padding: 8px 8px 8px 20px;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.2); z-index: 20; }
-.toast button { font: inherit; font-weight: 700; background: var(--tag); color: var(--tag-fg); border: none; border-radius: 999px; padding: 6px 16px; cursor: pointer; }
-@media (prefers-reduced-motion: reduce) { .row { transition: none; } .verdict.pop .mascot, .mascot .blink { animation: none; } }
+  width: min(calc(100% - 32px), 420px); background: var(--ink); color: var(--on-ink); border-radius: 999px; padding: 6px 6px 6px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 20; }
+.toast button { font: inherit; font-weight: 600; min-height: 40px; background: var(--tag); color: var(--tag-fg); border: none; border-radius: 999px; padding: 0 18px; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) {
+  body::after, .verdict.pop .mascot, .mascot .blink { animation: none; }
+  .visual canvas, .visual .mascot, .vtext, .row { transition: none; }
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <h1><span class="dot" aria-hidden="true"></span>คุ้มกว่า</h1>
-    <div><button class="link" id="helpBtn" type="button" aria-expanded="false">วิธีใช้</button><button class="link" id="clear" type="button">ล้าง</button></div>
+    <h1><span class="gem" aria-hidden="true"></span>คุ้มกว่า</h1>
+    <div class="top-actions">
+      <button class="link glass" id="helpBtn" type="button" aria-expanded="false">วิธีใช้</button>
+      <button class="link glass" id="clear" type="button">ล้าง</button>
+    </div>
   </div>
 
-  <div class="help" id="help" hidden>
+  <div class="help glass" id="help" hidden>
     <strong>ใส่ขนาดกับราคา แล้วดูผลด้านบนได้เลย</strong>
     <ul>
       <li><b>ขนาด</b> คือปริมาณต่อชิ้น เช่น 225 (ml), 500 (g) หรือ 6 (ม้วน)</li>
@@ -177,25 +206,26 @@ button:focus-visible, select:focus-visible { outline: 3px solid var(--pink); out
     </ul>
   </div>
 
-  <div class="mode" role="group" aria-label="หน่วย">
+  <div class="mode glass" role="group" aria-label="หน่วย">
     <button type="button" data-mode="plain">ไม่ระบุหน่วย</button>
     <button type="button" data-mode="weight">g / kg</button>
     <button type="button" data-mode="volume">ml / L</button>
   </div>
 
-  <section class="verdict" id="verdict" aria-live="polite"></section>
-  <div class="alert" id="alert" role="status" hidden></div>
+  <section class="verdict glass idle" id="verdict">
+    <div class="visual" aria-hidden="true"><canvas id="orb" width="144" height="144"></canvas><div class="mascot" id="mascot"></div></div>
+    <div class="vtext" id="vtext" aria-live="polite"></div>
+  </section>
+  <div class="thread" aria-hidden="true"></div>
+  <div class="alert glass" id="alert" role="status" hidden></div>
 
-  <div class="colhead" aria-hidden="true"><span></span><span>ขนาด</span><span>ราคา (บาท)</span><span></span></div>
-  <section class="list" id="list"></section>
+  <section class="list" id="list" aria-label="ตัวเลือกที่เทียบ"></section>
 
-  <div class="actions">
-    <button class="btn" id="add" type="button">+ เพิ่มตัวเลือก</button>
-  </div>
-  <p class="foot">ไม่มีโฆษณา · ข้อมูลเก็บในเครื่องนี้เท่านั้น ♡</p>
+  <button class="add glass" id="add" type="button">+ เพิ่มตัวเลือก</button>
+  <p class="foot">ไม่มีโฆษณา · ข้อมูลเก็บในเครื่องนี้เท่านั้น</p>
 </div>
 
-<div class="toast" id="toast" role="status" hidden><span>ล้างข้อมูลแล้ว</span><button type="button" id="undo">เลิกทำ</button></div>
+<div class="toast" id="toast" role="status" hidden><span id="toastMsg"></span><button type="button" id="undo">เลิกทำ</button></div>
 
 <script>
 const MODES = {
@@ -212,12 +242,14 @@ const PROMOS = {
 const LETTERS = "ABCDEFGH";
 const MAX = 8;
 const KEY = "kumkwa-v3";
+const THINK_MS = 450;
 const blank = unit => ({ size: "", price: "", unit, promo: null });
 const newPromo = type => ({ type, n: "", m: "", x: "", basis: "unit" });
 const SAMPLE = { mode: "plain", items: [
   { size: "12", price: "35.99", unit: "", promo: null },
   { size: "9", price: "29.99", unit: "", promo: null },
 ]};
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function load() {
   try {
@@ -238,6 +270,7 @@ let state = load();
 const $ = s => document.querySelector(s);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const blankStr = s => String(s ?? "").trim() === "";
 
 // Accepts "1,299.50", "35,99" (comma decimal) and stray spaces. Returns NaN when unusable.
 function parseNum(s) {
@@ -248,7 +281,7 @@ function parseNum(s) {
   if (!/^\d*\.?\d+$|^\d+\.$/.test(s)) return NaN;
   return parseFloat(s);
 }
-const numOr = (s, d) => String(s ?? "").trim() === "" ? d : parseNum(s);
+const numOr = (s, d) => blankStr(s) ? d : parseNum(s);
 function fmtMoney(n) {
   // show more digits when the value is tiny so different options don't look equal
   const d = n >= 1 ? 2 : n >= 0.1 ? 3 : 4;
@@ -263,16 +296,16 @@ function fmtQty(q) {
   return q >= 1000 ? fmtN(q / 1000) + " " + b : fmtN(q) + " " + s;
 }
 
-// Returns { qty, total, count, unitPrice } or { err } or null (row still empty)
+// Returns { qty, total, count, unitPrice } or { err, field } or null (row still empty)
 function calc(it) {
   const m = MODES[state.mode];
   const factor = (m.units.find(u => u[0] === it.unit) || m.units[0])[1];
   const size = parseNum(it.size), price = parseNum(it.price);
   const p = it.promo;
   const needPrice = !(p && p.type === "bundle");
-  if (String(it.size).trim() === "" && String(it.price).trim() === "") return null;
-  if (!(size > 0)) return { err: String(it.size).trim() === "" ? "ใส่ขนาด" : "ขนาดไม่ถูกต้อง" };
-  if (needPrice && !(price > 0)) return { err: String(it.price).trim() === "" ? "ใส่ราคา" : "ราคาต้องมากกว่า 0" };
+  if (blankStr(it.size) && blankStr(it.price)) return null;
+  if (!(size > 0)) return { err: blankStr(it.size) ? "ใส่ขนาด" : isNaN(size) ? "ขนาดไม่ถูกต้อง" : "ขนาดต้องมากกว่า 0", field: "size" };
+  if (needPrice && !(price > 0)) return { err: blankStr(it.price) ? "ใส่ราคา" : isNaN(price) ? "ราคาไม่ถูกต้อง" : "ราคาต้องมากกว่า 0", field: "price" };
 
   let count = 1, total = price;
   if (p) {
@@ -284,7 +317,7 @@ function calc(it) {
     } else if (p.type === "bundle") {
       const n = numOr(p.n, 2), x = parseNum(p.x);
       if (!(n >= 1) || n % 1) return { err: "จำนวนชิ้นต้องเป็นจำนวนเต็ม" };
-      if (!(x > 0)) return { err: "ใส่ราคาเหมา" };
+      if (!(x > 0)) return { err: blankStr(p.x) ? "ใส่ราคาเหมา" : "ราคาเหมาไม่ถูกต้อง" };
       count = n; total = x;
     } else if (p.type === "nth") {
       const n = numOr(p.n, 2), d = numOr(p.x, 50);
@@ -293,7 +326,7 @@ function calc(it) {
       count = n; total = price * (n - 1) + price * (1 - d / 100);
     } else if (p.type === "off") {
       const x = parseNum(p.x);
-      if (!(x > 0)) return { err: "ใส่ส่วนลดเป็นบาท" };
+      if (!(x > 0)) return { err: blankStr(p.x) ? "ใส่ส่วนลดเป็นบาท" : "ส่วนลดไม่ถูกต้อง" };
       if (x >= price) return { err: "ส่วนลดมากกว่าราคา" };
       total = price - x;
     }
@@ -302,16 +335,71 @@ function calc(it) {
   return { qty, total, count, unitPrice: total / qty * m.per };
 }
 
+// Little price-tag buddy that answers once the orb has finished thinking
+function mascotSvg(mood) {
+  const eyes = mood === "happy"
+    ? `<path d="M36 46 q5 -6 10 0 M58 46 q5 -6 10 0" fill="none" stroke="#2a2b3d" stroke-width="4" stroke-linecap="round"/>`
+    : `<g class="blink"><circle cx="41" cy="46" r="4.5" fill="#2a2b3d"/><circle cx="63" cy="46" r="4.5" fill="#2a2b3d"/></g>`;
+  const mouth = mood === "happy" ? `<path d="M42 58 q10 11 20 0" fill="#2a2b3d"/>`
+    : `<path d="M44 60 h16" stroke="#2a2b3d" stroke-width="4" stroke-linecap="round"/>`;
+  const extra = mood === "happy" ? `<path d="M93 14 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#ff7fbf"/>` : "";
+  return `<svg viewBox="0 0 110 100"><g transform="rotate(-8 55 52)">
+      <path d="M22 18 H70 L94 52 L70 86 H22 Q12 86 12 76 V28 Q12 18 22 18Z" fill="#ffd84a" stroke="#2a2b3d" stroke-width="3.5" stroke-linejoin="round"/>
+      <circle cx="76" cy="52" r="5" fill="#fff" stroke="#2a2b3d" stroke-width="3"/>
+      ${eyes}${mouth}
+      <ellipse cx="31" cy="58" rx="6" ry="3.5" fill="#ff8fb3" opacity=".7"/><ellipse cx="68" cy="60" rx="5" ry="3" fill="#ff8fb3" opacity=".7"/>
+    </g>${extra}</svg>`;
+}
+
+// Dotted "thinking" orb: points on a sphere, rotating; spins faster while thinking
+const orb = (() => {
+  const cv = $("#orb"), ctx = cv.getContext("2d");
+  const N = 170, pts = [];
+  for (let i = 0; i < N; i++) {
+    const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = i * 2.39996;
+    pts.push([Math.cos(t) * r, y, Math.sin(t) * r]);
+  }
+  let raf = 0, angle = 0, speed = 0.004, running = false, last = 0;
+  const css = getComputedStyle(document.documentElement);
+  function draw() {
+    const a = css.getPropertyValue("--dot-a").trim() || "#5b78ff", b = css.getPropertyValue("--dot-b").trim() || "#ff7fbf";
+    ctx.clearRect(0, 0, 144, 144);
+    const ca = Math.cos(angle), sa = Math.sin(angle), tilt = 0.45, ct = Math.cos(tilt), st = Math.sin(tilt);
+    for (const [x, y, z] of pts) {
+      const x1 = x * ca + z * sa, z1 = -x * sa + z * ca;
+      const y2 = y * ct - z1 * st, z2 = y * st + z1 * ct;
+      const depth = (z2 + 1) / 2;
+      ctx.globalAlpha = 0.15 + depth * 0.85;
+      ctx.fillStyle = y2 > 0 ? b : a;
+      ctx.beginPath(); ctx.arc(72 + x1 * 58, 72 + y2 * 58, 1 + depth * 1.8, 0, 6.283); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function frame(t) {
+    const dt = last ? Math.min(t - last, 50) : 16; last = t;
+    angle += speed * dt / 16;
+    draw();
+    if (running) raf = requestAnimationFrame(frame);
+  }
+  return {
+    set(mode) { // "think" | "idle" | "off"
+      speed = mode === "think" ? 0.05 : 0.006;
+      if (reduceMotion || mode === "off") { running = false; cancelAnimationFrame(raf); draw(); return; }
+      if (!running) { running = true; last = 0; raf = requestAnimationFrame(frame); }
+    },
+  };
+})();
+
 function promoEditor(p, i, L) {
   const typeSel = `<select id="ptype-${i}" aria-label="ชนิดโปรของ ${L}" data-p="type">${Object.entries(PROMOS).map(([k, v]) => `<option value="${k}"${k === p.type ? " selected" : ""}>${v}</option>`).join("")}</select>`;
-  const inp = (k, ph, label) => `<input id="p${k}-${i}" aria-label="${label} (${L})" inputmode="decimal" enterkeyhint="next" autocomplete="off" placeholder="${ph}" data-p="${k}" value="${esc(p[k])}">`;
+  const inp = (k, ph, label) => `<input id="p${k}-${i}" aria-label="${label} (${L})" inputmode="decimal" enterkeyhint="next" autocomplete="off" placeholder="${ph}" data-p="${k}" value="${esc(p[k])}" aria-describedby="sum-${i}">`;
   let f = "";
   if (p.type === "free") f = `ซื้อ ${inp("n", "1", "จำนวนซื้อ")} แถม ${inp("m", "0", "จำนวนแถม")}
       <select id="pbasis-${i}" aria-label="ราคาที่ใส่คือ (${L})" data-p="basis"><option value="unit"${p.basis !== "total" ? " selected" : ""}>ราคาที่ใส่ = ต่อชิ้น</option><option value="total"${p.basis === "total" ? " selected" : ""}>ราคาที่ใส่ = รวมทั้งหมด</option></select>`;
   if (p.type === "bundle") f = `${inp("n", "2", "จำนวนชิ้น")} ชิ้น ราคา ${inp("x", "99", "ราคาเหมา")} บาท`;
   if (p.type === "nth") f = `ชิ้นที่ ${inp("n", "2", "ชิ้นที่ลด")} ลด ${inp("x", "50", "เปอร์เซ็นต์ส่วนลด")} %`;
   if (p.type === "off") f = `ลด ${inp("x", "20", "ส่วนลดเป็นบาท")} บาท`;
-  return `<div class="promo">${typeSel} ${f}<button class="x" type="button" data-act="nopromo" aria-label="ยกเลิกโปรของ ${L}">ยกเลิก</button></div>`;
+  return `<div class="promo">${typeSel} ${f}<button class="x" type="button" data-act="nopromo">ยกเลิกโปร<span class="sr"> ของ ${L}</span></button></div>`;
 }
 
 function render() {
@@ -325,46 +413,33 @@ function render() {
       `<select id="unit-${i}" aria-label="หน่วยของ ${L}" data-k="unit">${m.units.map(u => `<option${u[0] === it.unit ? " selected" : ""}>${u[0]}</option>`).join("")}</select>`;
     const bundle = it.promo && it.promo.type === "bundle";
     const el = document.createElement("div");
-    el.className = "row";
+    el.className = "row glass";
     el.dataset.i = i;
+    el.setAttribute("role", "group");
+    el.setAttribute("aria-label", `ตัวเลือก ${L}`);
     el.innerHTML = `
       <div class="row-main">
-        <div class="letter">${L}</div>
-        <div class="num-wrap"><input class="num" id="size-${i}" aria-label="ขนาดของ ${L}" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-k="size" value="${esc(it.size)}">${unitSel}</div>
-        <div class="num-wrap${bundle ? " dim" : ""}" title="${bundle ? "ใช้ราคาเหมาแทน" : ""}"><span class="affix">฿</span><input class="num" id="price-${i}" aria-label="ราคาของ ${L}" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-k="price" value="${esc(it.price)}" placeholder="${bundle ? "ไม่ต้องใส่" : ""}"></div>
-        <button class="del" type="button" aria-label="ลบ ${L}" ${state.items.length <= 2 ? "disabled" : ""}>×</button>
+        <div class="letter">${L}<span class="sr best-sr"></span></div>
+        <div class="pair">
+          <label class="field" for="size-${i}"><span class="cap">ขนาด</span>
+            <span class="fwrap"><input class="num" id="size-${i}" aria-label="ขนาดของ ${L}" aria-describedby="sum-${i}" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-k="size" value="${esc(it.size)}" placeholder="เช่น 225">${unitSel}</span></label>
+          <label class="field${bundle ? " dim" : ""}" for="price-${i}"><span class="cap">${bundle ? "ราคาปกติ (ไม่ต้องใส่)" : "ราคา (บาท)"}</span>
+            <span class="fwrap"><input class="num" id="price-${i}" aria-label="ราคาของ ${L}" aria-describedby="sum-${i}" inputmode="decimal" enterkeyhint="next" autocomplete="off" data-k="price" value="${esc(it.price)}" placeholder="฿"></span></label>
+        </div>
+        <button class="del hit" type="button" aria-label="ลบตัวเลือก ${L}" ${state.items.length <= 2 ? "disabled" : ""}>×</button>
       </div>
       <div class="row-sub">
-        ${it.promo ? promoEditor(it.promo, i, L) : `<button class="promo-btn" type="button" data-act="promo">+ โปร / ซื้อหลายชิ้น</button>`}
-        <div class="info"><span class="summary"></span><span class="unitprice"></span></div>
+        ${it.promo ? promoEditor(it.promo, i, L) : `<button class="pill promo-btn hit" type="button" data-act="promo">+ โปร / ซื้อหลายชิ้น<span class="sr"> ของ ${L}</span></button>`}
+        <div class="info"><span class="summary" id="sum-${i}"></span><span class="unitprice"></span></div>
       </div>`;
     list.appendChild(el);
   });
   $("#add").disabled = state.items.length >= MAX;
-  update();
+  update(true);
 }
 
-let lastWin = "";
-// Little price-tag buddy that reacts to the result
-function mascot(mood) {
-  const eyes = mood === "happy"
-    ? `<path d="M36 46 q5 -6 10 0 M58 46 q5 -6 10 0" fill="none" stroke="#3a3152" stroke-width="4" stroke-linecap="round"/>`
-    : `<g class="blink"><circle cx="41" cy="46" r="4.5" fill="#3a3152"/><circle cx="63" cy="46" r="4.5" fill="#3a3152"/></g>`;
-  const mouth = mood === "happy" ? `<path d="M42 58 q10 11 20 0" fill="#3a3152"/>`
-    : mood === "equal" ? `<path d="M44 60 h16" stroke="#3a3152" stroke-width="4" stroke-linecap="round"/>`
-    : `<circle cx="56" cy="61" r="4" fill="none" stroke="#3a3152" stroke-width="3.5"/>`;
-  const extra = mood === "think" ? `<circle cx="92" cy="20" r="4" fill="#c9bfe6"/><circle cx="101" cy="9" r="6" fill="#c9bfe6"/>`
-    : mood === "happy" ? `<path d="M93 14 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#ff8fb3"/>` : "";
-  return `<div class="mascot" aria-hidden="true"><svg viewBox="0 0 110 100">
-    <g transform="rotate(-8 55 52)">
-      <path d="M22 18 H70 L94 52 L70 86 H22 Q12 86 12 76 V28 Q12 18 22 18Z" fill="#ffd84a" stroke="#3a3152" stroke-width="3.5" stroke-linejoin="round"/>
-      <circle cx="76" cy="52" r="5" fill="#fff" stroke="#3a3152" stroke-width="3"/>
-      ${eyes}${mouth}
-      <ellipse cx="31" cy="58" rx="6" ry="3.5" fill="#ff8fb3" opacity=".7"/><ellipse cx="68" cy="60" rx="5" ry="3" fill="#ff8fb3" opacity=".7"/>
-    </g>${extra}</svg></div>`;
-}
-
-function update() {
+let lastWin = "", thinkTimer = 0;
+function update(instant) {
   const m = MODES[state.mode];
   const res = state.items.map(calc);
   const valid = res.map((r, i) => r && !r.err && { ...r, i }).filter(Boolean).sort((a, b) => a.unitPrice - b.unitPrice);
@@ -378,7 +453,14 @@ function update() {
     const i = +el.dataset.i, r = res[i], it = state.items[i];
     const isBest = decisive && tiedBest.some(v => v.i === i);
     el.classList.toggle("best", isBest);
+    el.querySelector(".best-sr").textContent = isBest ? " คุ้มที่สุด" : "";
     el.querySelector(".unitprice").textContent = r && !r.err ? `฿${fmtMoney(r.unitPrice)} / ${m.perLabel}` : "";
+    for (const f of ["size", "price"]) {
+      const bad = !!(r && r.err && r.field === f);
+      const inp = el.querySelector(`[data-k="${f}"]`);
+      inp.setAttribute("aria-invalid", bad);
+      inp.closest(".field").classList.toggle("bad", bad);
+    }
     const s = el.querySelector(".summary");
     s.className = "summary";
     if (!r) { s.textContent = ""; return; }
@@ -386,29 +468,11 @@ function update() {
     const parts = [];
     if (it.promo) parts.push(`จ่ายรวม ${fmtBaht(r.total)} ได้ ${fmtN(r.count)} ชิ้น` + (state.mode === "plain" ? "" : ` (${fmtQty(r.qty)})`));
     if (decisive && !isBest) {
-      const extra = r.total - best.unitPrice / m.per * r.qty;
-      parts.push(`แพงกว่า ${LETTERS[best.i]} ${fmtBaht(extra)}`);
+      parts.push(`แพงกว่า ${LETTERS[best.i]} ${fmtBaht(r.total - best.unitPrice / m.per * r.qty)}`);
       s.classList.add("more");
     }
     s.textContent = parts.join(" · ");
   });
-
-  const v = $("#verdict");
-  v.classList.toggle("win", decisive);
-  const winKey = decisive ? bestNames : "";
-  if (winKey && winKey !== lastWin) { v.classList.remove("pop"); void v.offsetWidth; v.classList.add("pop"); }
-  lastWin = winKey;
-  if (valid.length < 2) {
-    v.innerHTML = mascot("think") + `<div class="vtext"><div class="big">ใส่ขนาดกับราคาอย่างน้อย 2 ตัวเลือกนะ</div><div class="sub">ผลจะขึ้นตรงนี้ทันทีที่พิมพ์</div></div>`;
-  } else if (!decisive) {
-    v.innerHTML = mascot("equal") + `<div class="vtext"><div class="big">คุ้มเท่ากันเลย</div><div class="sub">ราคาต่อ ${m.perLabel} เท่ากันทุกตัวเลือก เลือกแบบที่ใช้หมดทันได้เลย</div></div>`;
-  } else {
-    const next = valid.find(x => !near(x.unitPrice, best.unitPrice));
-    const pct = (1 - best.unitPrice / next.unitPrice) * 100;
-    const saved = next.total - best.unitPrice / m.per * next.qty;
-    v.innerHTML = mascot("happy") + `<div class="vtext"><div class="big">${bestNames} คุ้มกว่า ${pct < 0.5 ? "นิดเดียว" : fmtPct(pct)}!</div>
-      <div class="save">ได้ปริมาณเท่า ${LETTERS[next.i]} (${fmtQty(next.qty)}) แต่จ่ายน้อยกว่า <b>${fmtBaht(saved)}</b></div></div>`;
-  }
 
   // Plain mode can't convert units, so a huge size gap usually means L vs ml or kg vs g
   const alert = $("#alert");
@@ -418,6 +482,39 @@ function update() {
     alert.hidden = false;
   } else alert.hidden = true;
   save();
+
+  // the answer card: think for a moment, then answer
+  const answer = () => {
+    const v = $("#verdict"), vt = $("#vtext");
+    v.classList.remove("thinking");
+    v.classList.toggle("win", decisive);
+    v.classList.toggle("idle", valid.length < 2);
+    if (valid.length < 2) {
+      vt.innerHTML = `<div class="eyebrow">พร้อมช่วยเทียบ</div><div class="big">ใส่ขนาดกับราคาอย่างน้อย 2 ตัวเลือก</div><div class="sub">ผลจะขึ้นตรงนี้ทันทีที่พิมพ์</div>`;
+      orb.set("idle");
+    } else {
+      orb.set("off");
+      if (!decisive) {
+        $("#mascot").innerHTML = mascotSvg("equal");
+        vt.innerHTML = `<div class="eyebrow">ผลการเทียบ</div><div class="big">คุ้มเท่ากัน</div><div class="sub">ราคาต่อ ${m.perLabel} เท่ากันทุกตัวเลือก เลือกแบบที่ใช้หมดทันได้เลย</div>`;
+      } else {
+        const next = valid.find(x => !near(x.unitPrice, best.unitPrice));
+        const pct = (1 - best.unitPrice / next.unitPrice) * 100;
+        const saved = next.total - best.unitPrice / m.per * next.qty;
+        $("#mascot").innerHTML = mascotSvg("happy");
+        vt.innerHTML = `<div class="eyebrow">ผลการเทียบ</div><div class="big">${bestNames} คุ้มกว่า ${pct < 0.5 ? "นิดเดียว" : fmtPct(pct)}</div>
+          <div class="save">ได้ปริมาณเท่า ${LETTERS[next.i]} (${fmtQty(next.qty)}) จ่ายน้อยกว่า <b>${fmtBaht(saved)}</b></div>`;
+      }
+    }
+    const winKey = decisive ? bestNames : "";
+    if (winKey && winKey !== lastWin) { v.classList.remove("pop"); void v.offsetWidth; v.classList.add("pop"); }
+    lastWin = winKey;
+  };
+  clearTimeout(thinkTimer);
+  if (instant || reduceMotion) { answer(); return; }
+  $("#verdict").classList.add("thinking");
+  orb.set("think");
+  thinkTimer = setTimeout(answer, THINK_MS);
 }
 
 $("#list").addEventListener("input", e => {
@@ -437,10 +534,14 @@ $("#list").addEventListener("change", e => {
   if (e.target.dataset.p === "type") { it.promo = newPromo(e.target.value); render(); document.getElementById(`ptype-${i}`).focus(); }
 });
 $("#list").addEventListener("click", e => {
-  const row = e.target.closest(".row"); if (!row) return;
+  const btn = e.target.closest("button"); if (!btn) return;
+  const row = btn.closest(".row"); if (!row) return;
   const i = +row.dataset.i;
-  if (e.target.classList.contains("del")) { state.items.splice(i, 1); render(); return; }
-  const act = e.target.dataset.act;
+  if (btn.classList.contains("del")) {
+    snapshotForUndo(`ลบตัวเลือก ${LETTERS[i]} แล้ว`);
+    state.items.splice(i, 1); render(); return;
+  }
+  const act = btn.dataset.act;
   if (act === "promo") { state.items[i].promo = newPromo("free"); render(); document.getElementById(`pn-${i}`).focus(); }
   if (act === "nopromo") { state.items[i].promo = null; render(); }
 });
@@ -460,14 +561,19 @@ $("#add").addEventListener("click", () => {
 });
 
 let undoState = null, toastTimer;
-$("#clear").addEventListener("click", () => {
+function snapshotForUndo(msg) {
   undoState = structuredClone(state);
-  const u = MODES[state.mode].units[0][0];
-  state.items = [blank(u), blank(u)];
-  render();
+  $("#toastMsg").textContent = msg;
   $("#toast").hidden = false;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { $("#toast").hidden = true; undoState = null; }, 6000);
+}
+$("#clear").addEventListener("click", () => {
+  snapshotForUndo("ล้างข้อมูลแล้ว");
+  const u = MODES[state.mode].units[0][0];
+  state.items = [blank(u), blank(u)];
+  render();
+  document.getElementById("size-0").focus();
 });
 $("#undo").addEventListener("click", () => {
   if (undoState) { state = undoState; undoState = null; render(); }
@@ -475,7 +581,7 @@ $("#undo").addEventListener("click", () => {
   clearTimeout(toastTimer);
 });
 $("#helpBtn").addEventListener("click", e => {
-  const h = $("#help"); h.hidden = !h.hidden; e.target.setAttribute("aria-expanded", !h.hidden);
+  const h = $("#help"); h.hidden = !h.hidden; e.currentTarget.setAttribute("aria-expanded", !h.hidden);
 });
 document.querySelectorAll(".mode button").forEach(b => b.addEventListener("click", () => {
   if (b.dataset.mode === state.mode) return;
@@ -483,9 +589,10 @@ document.querySelectorAll(".mode button").forEach(b => b.addEventListener("click
   state.items.forEach(it => it.unit = MODES[state.mode].units[0][0]);
   render();
 }));
+// pause the orb when the app is in the background
+document.addEventListener("visibilitychange", () => { if (document.hidden) orb.set("off"); else update(true); });
 render();
-</script>
-<script>
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 }
