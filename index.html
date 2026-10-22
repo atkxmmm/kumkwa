@@ -245,10 +245,7 @@ const KEY = "kumkwa-v3";
 const THINK_MS = 450;
 const blank = unit => ({ size: "", price: "", unit, promo: null });
 const newPromo = type => ({ type, n: "", m: "", x: "", basis: "unit" });
-const SAMPLE = { mode: "plain", items: [
-  { size: "12", price: "35.99", unit: "", promo: null },
-  { size: "9", price: "29.99", unit: "", promo: null },
-]};
+const RESUME_AFTER_MS = 30 * 60 * 1000;  // back from the background after this long = fresh start
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function load() {
@@ -263,12 +260,21 @@ function load() {
       return old;
     }
   } catch (e) {}
-  return structuredClone(SAMPLE);
+  return null;
 }
-let state = load();
+const fresh = mode => { const u = MODES[mode].units[0][0]; return { mode, items: [blank(u), blank(u)] }; };
+const hasData = s => !!s && s.items.some(it => !blankStr(it.size) || !blankStr(it.price));
+let lastSession = load();
+let savedMode = null;
+try { savedMode = localStorage.getItem(KEY + "-mode"); } catch (e) {}
+let state = fresh(MODES[savedMode] ? savedMode : lastSession ? lastSession.mode : "plain");
 
 const $ = s => document.querySelector(s);
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+// Keep the last list that had numbers in it, so a blank launch never wipes it; the unit choice is kept on its own
+const save = () => { try {
+  localStorage.setItem(KEY + "-mode", state.mode);
+  if (hasData(state)) localStorage.setItem(KEY, JSON.stringify(state));
+} catch (e) {} };
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const blankStr = s => String(s ?? "").trim() === "";
 
@@ -560,14 +566,16 @@ $("#add").addEventListener("click", () => {
   document.getElementById(`size-${state.items.length - 1}`).focus();
 });
 
-let undoState = null, toastTimer;
-function snapshotForUndo(msg) {
-  undoState = structuredClone(state);
+let restoreState = null, toastTimer;
+function showToast(msg, btn, restore) {
+  restoreState = restore;
   $("#toastMsg").textContent = msg;
+  $("#undo").textContent = btn;
   $("#toast").hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { $("#toast").hidden = true; undoState = null; }, 6000);
+  toastTimer = setTimeout(() => { $("#toast").hidden = true; restoreState = null; }, 6000);
 }
+const snapshotForUndo = msg => showToast(msg, "เลิกทำ", structuredClone(state));
 $("#clear").addEventListener("click", () => {
   snapshotForUndo("ล้างข้อมูลแล้ว");
   const u = MODES[state.mode].units[0][0];
@@ -576,7 +584,7 @@ $("#clear").addEventListener("click", () => {
   document.getElementById("size-0").focus();
 });
 $("#undo").addEventListener("click", () => {
-  if (undoState) { state = undoState; undoState = null; render(); }
+  if (restoreState) { state = restoreState; restoreState = null; render(); }
   $("#toast").hidden = true;
   clearTimeout(toastTimer);
 });
@@ -590,8 +598,22 @@ document.querySelectorAll(".mode button").forEach(b => b.addEventListener("click
   render();
 }));
 // pause the orb when the app is in the background
-document.addEventListener("visibilitychange", () => { if (document.hidden) orb.set("off"); else update(true); });
+let hiddenAt = 0;
+function startFresh() {
+  const prev = structuredClone(state);
+  state = fresh(state.mode);
+  render();
+  document.getElementById("size-0").focus();
+  if (hasData(prev)) showToast("เริ่มรายการใหม่แล้ว", "ดูรายการเดิม", prev);
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) { hiddenAt = Date.now(); orb.set("off"); return; }
+  if (hiddenAt && Date.now() - hiddenAt > RESUME_AFTER_MS && hasData(state)) startFresh();
+  else update(true);
+});
 render();
+document.getElementById("size-0").focus();
+if (hasData(lastSession)) showToast("พร้อมกรอกรายการใหม่", "ดูรายการเดิม", lastSession);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
