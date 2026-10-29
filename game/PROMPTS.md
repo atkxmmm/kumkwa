@@ -87,6 +87,72 @@ Half-body character portrait from the waist up, facing the viewer, square 1024x1
 Now draw this same character as a small chibi pixel art game sprite: same hair, outfit colors and weapon, full body from head to feet, standing in a battle-ready pose facing right. Style: chibi pixel art like a modern mobile pixel RPG, about 2.5 heads tall, big head and big eyes, small body, bright saturated colors, crisp dark outline, rich detailed shading, 3/4 top-down view, keep the same rarity glow. Single character only, transparent background, square 1024x1024, no text.
 ```
 
+## Leonardo.ai: ตัว chibi ในฉาก (ไม่ต้องทำในแชทเดียวกับภาพการ์ด)
+
+ตั้งค่า: ภาพจัตุรัส 1:1 · เปิด **Transparency** ถ้ามี ถ้าไม่มีให้เปลี่ยนคำว่า `transparent background` เป็น `plain white background` แล้วผมจะตัดพื้นขาวออกให้ · ใส่ Negative prompt ถ้ามีช่อง: `text, watermark, multiple characters, cropped, blurry, realistic`
+
+เซฟเป็น `assets/heroes/<ชื่อไฟล์>.png`
+
+### เบลล์ · R → `bell.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, young woman with long brown hair, steel-grey adventurer jacket, holding a longsword, simple outfit, no glow
+```
+
+### เฟน · R → `fen.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, young woman with a green ponytail, olive ranger coat with leather straps, holding a wooden longbow, simple outfit, no glow
+```
+
+### พิม · R → `pim.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, cheerful young woman with a pink bob, purple witch hat and robe, holding a staff with a pink fire orb, simple outfit, no glow
+```
+
+### น้อย · R → `noi.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, gentle young woman with long black hair, cream white priestess robe with mint details, holding a glowing spell book, simple outfit, no glow
+```
+
+### การ์เน็ต · SR → `garnet.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, strong woman with a dark bob and tan skin, navy heavy armor with brass plates, holding a big tower shield, detailed outfit, soft purple sparkle aura
+```
+
+### เว็กซ์ · SR → `vex.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, mysterious rogue woman with violet hair under a dark hood, black cloth mask, crimson details, holding twin daggers, detailed outfit, soft purple sparkle aura
+```
+
+### มิระ · SR → `mira.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, elegant woman with long icy light-blue hair, blue coat with frosty details, holding a crystal ice staff, detailed outfit, soft purple sparkle aura
+```
+
+### แทมมี่ · SR → `tammy.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, energetic bard woman with a golden ponytail and brown skin, red jacket, playing an ornate lute, detailed outfit, soft purple sparkle aura
+```
+
+### รูบี้ · SSR → `ruby.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, confident demon woman with lilac-pink skin, long dark hair, curled red horns, pointed ears, dark navy outfit, holding a huge dark greatsword, ornate outfit with gold trim, golden glowing aura and sparkles
+```
+
+### ไคดะ · SSR → `kaida.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, fierce dragon woman with spiky red hair, crimson dragon wings, dark red armor, holding a long dragon spear, ornate outfit with gold trim, golden glowing aura and sparkles
+```
+
+### เอลาร่า · SSR → `elara.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, serene saint woman with long pale golden hair and a glowing halo, white and gold robe, holding a holy staff, ornate outfit with gold trim, golden glowing aura and sparkles
+```
+
+### โมจิ · SSR → `mochi.png`
+```
+chibi pixel art game sprite, mobile pixel RPG style, about 2.5 heads tall, big head, big eyes, small body, bright saturated colors, crisp dark outline, detailed shading, 3/4 top-down view, full body from head to feet, facing right, battle-ready pose, single character, centered, transparent background, sleepy cat-eared woman with a white bob, white cat ears and tail, dark grey hoodie with a long green scarf, holding a katana, ornate outfit with gold trim, golden glowing aura and sparkles
+```
+
 ## 3. มอนสเตอร์ (chibi)
 เซฟเป็น `assets/monsters/<ชื่อไฟล์>.png` · แทนคำว่า MONSTER ด้วยคำอธิบายในตาราง
 
