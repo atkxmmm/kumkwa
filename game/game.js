@@ -1244,9 +1244,11 @@ const ACT = {
     S.gold -= c; S.farm.plots.push(null);
     save(); renderPanel();
   },
-  reset: () => {
-    if (!confirm("ลบเซฟแล้วเริ่มใหม่ทั้งหมด แน่ใจนะ?")) return;
-    localStorage.removeItem(SAVE_KEY);
+  reset: el => {
+    // two taps instead of confirm(), which some app views silently refuse
+    if (!el.dataset.sure) { el.dataset.sure = "1"; el.textContent = "แตะอีกครั้งเพื่อลบเซฟจริงๆ"; return; }
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* storage blocked */ }
+    S = freshState(); save();
     location.reload();
   },
   menu: () => menuSheet(),
