@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="description" content="เกมกาชาผจญภัยแบบ idle ภาพพิกเซล เปิดทิ้งไว้ ทีมตีมอนเอง">
+<meta name="description" content="เกมกาชาผจญภัยแฟนตาซีแบบ idle ภาพพิกเซล เปิดทิ้งไว้ ทีมสู้เอง">
 <meta name="theme-color" content="#0f0b14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -96,14 +96,12 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
 .pinfo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .pname { font-size: .8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--c); }
 .pname em { font-style: normal; font-weight: 400; color: var(--muted); font-size: .66rem; margin-left: 4px; }
-.pcard.ctrl { border-color: var(--c); background: var(--panel-2); }
-.pcard.ctrl::before { content: "เล็ง"; position: absolute; top: -9px; left: 4px; font-size: .62rem; font-weight: 700; background: var(--c); color: var(--ink); padding: 0 4px; border-radius: 3px; }
 .bar { height: 5px; background: #0b0810; border: 1px solid #000; display: block; }
 .bar i { display: block; height: 100%; transition: width .1s linear; }
 .bar.hp i { background: var(--hp); }
 .bar.en i { background: var(--en); }
 .pcard.ready { border-color: var(--en); animation: ready 1s ease-in-out infinite; }
-.pcard.ready::after { content: "BURST!"; position: absolute; top: -9px; right: 4px; font-size: .62rem; font-weight: 700; background: var(--en); color: var(--ink); padding: 0 4px; border-radius: 3px; }
+.pcard.ready::after { content: "สกิล!"; position: absolute; top: -9px; right: 4px; font-size: .62rem; font-weight: 700; background: var(--en); color: var(--ink); padding: 0 4px; border-radius: 3px; }
 @keyframes ready { 50% { box-shadow: 0 0 0 2px rgba(122, 216, 255, .35); } }
 .pcard.down { opacity: .4; filter: grayscale(1); }
 

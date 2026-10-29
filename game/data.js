@@ -8,74 +8,67 @@ const RARITY = {
 };
 
 const ROLE = {
-  attacker:  { th: "บุก",     hp: .9,  atk: 1.2, def: .85, crit: .12 },
-  defender:  { th: "ตั้งรับ",  hp: 1.6, atk: .75, def: 1.7, crit: .05 },
-  supporter: { th: "ซัพพอร์ต", hp: 1.1, atk: .85, def: 1.1, crit: .08 },
-};
-
-// interval = seconds between shots, mult = damage per shot (per pellet for SG), ammo then reload seconds.
-const GUNS = {
-  AR:  { th: "ไรเฟิล",     sprite: "rifle",   interval: .2,  mult: .34, ammo: 30,  reload: 1.6 },
-  SMG: { th: "SMG",       sprite: "smg",     interval: .11, mult: .19, ammo: 50,  reload: 1.4 },
-  SG:  { th: "ช็อตกัน",    sprite: "shotgun", interval: .9,  mult: .24, ammo: 6,   reload: 1.8, pellets: 8, spread: 10 },
-  SNP: { th: "สไนเปอร์",   sprite: "sniper",  interval: 1.5, mult: 3.4, ammo: 5,   reload: 2,   crit: .2 },
-  RL:  { th: "จรวด",      sprite: "rocket",  interval: 1.4, mult: 2.2, ammo: 5,   reload: 2.2, splash: 16 },
-  MG:  { th: "ปืนกล",      sprite: "mg",      interval: .24, mult: .22, ammo: 150, reload: 3,   ramp: .07 },
+  warrior: { th: "นักดาบ",   hp: 1.2,  atk: 1.0,  def: 1.2, spd: 100, crit: .08, ranged: false },
+  tank:    { th: "อัศวินโล่", hp: 1.7,  atk: .7,   def: 1.9, spd: 85,  crit: .05, ranged: false },
+  archer:  { th: "นักธนู",   hp: .85,  atk: 1.15, def: .8,  spd: 115, crit: .15, ranged: true },
+  mage:    { th: "จอมเวท",   hp: .8,   atk: 1.3,  def: .7,  spd: 90,  crit: .1,  ranged: true },
+  healer:  { th: "นักบวช",   hp: .95,  atk: .7,   def: .9,  spd: 95,  crit: .05, ranged: true },
+  rogue:   { th: "นักฆ่า",    hp: .9,   atk: 1.2,  def: .8,  spd: 125, crit: .25, ranged: false },
+  bard:    { th: "กวี",       hp: 1.0,  atk: .85,  def: 1.0, spd: 105, crit: .08, ranged: true },
 };
 
 // skill kinds: hit (front/lowest/random, hits), aoe, heal, shield, buff. Extras: burn, slow, lifesteal, taunt, crit.
+// Skills count double against monster shields and boss charge gauges.
 const HEROES = {
-  bell:   { name: "เบลล์", rarity: "R", role: "attacker", gun: "AR", color: "#e0a26a",
-            look: { skin: "#e8b58f", hair: "#7a4a2a", style: "long", outfit: "#5a6b7d", accent: "#c9a24a", wood: "#3a3a44", metal: "#c8ccd8" },
-            skill: { name: "ระดมยิง", kind: "hit", target: "front", mult: 1.1, hits: 5 },
-            line: "กาแฟดำแก้วเดียวก็พอ… ที่เหลือฝากปืนฉันเถอะ" },
-  fen:    { name: "เฟน", rarity: "R", role: "attacker", gun: "SNP", color: "#8fd28a",
-            look: { skin: "#f0c7a0", hair: "#3e7d4a", style: "ponytail", outfit: "#4f6b3a", accent: "#a8743a", wood: "#2e3a2a", metal: "#d8e0c8" },
-            skill: { name: "นัดเดียวจอด", kind: "hit", target: "lowest", mult: 5, hits: 1, crit: true },
+  bell:   { name: "เบลล์", rarity: "R", role: "warrior", color: "#e0a26a",
+            look: { skin: "#e8b58f", hair: "#7a4a2a", style: "long", outfit: "#5a6b7d", accent: "#c9a24a", weapon: "sword" },
+            skill: { name: "ฟันสุดแรง", kind: "hit", target: "front", mult: 2.6, hits: 1 },
+            line: "กาแฟดำแก้วเดียวก็พอ… ที่เหลือฝากดาบฉันเถอะ" },
+  fen:    { name: "เฟน", rarity: "R", role: "archer", color: "#8fd28a",
+            look: { skin: "#f0c7a0", hair: "#3e7d4a", style: "ponytail", outfit: "#4f6b3a", accent: "#a8743a", weapon: "bow" },
+            skill: { name: "ศรสามดอก", kind: "hit", target: "random", mult: 1.2, hits: 3 },
             line: "ยิงจากตรงนี้ได้ ไม่ต้องเดินไปใกล้หรอก" },
-  pim:    { name: "พิม", rarity: "R", role: "attacker", gun: "RL", color: "#ff9cc0",
-            look: { skin: "#f3cfb3", hair: "#e07a9a", style: "bob", outfit: "#4a3a7a", accent: "#f2d16b", extra: "#ff6a8a", wood: "#3a3050", weapon: "rocket" },
-            skill: { name: "พลุดอกใหญ่", kind: "aoe", mult: 1.6 },
-            line: "จรวดลูกนี้เพิ่งหัดยิงเมื่อวาน… น่าจะไม่ระเบิดใส่เรานะ" },
-  noi:    { name: "น้อย", rarity: "R", role: "supporter", gun: "SMG", color: "#8fe0c8",
-            look: { skin: "#e9b994", hair: "#2b2233", style: "long", outfit: "#e8e0cc", accent: "#7ac0a8", wood: "#3a4448", metal: "#e8f0f0" },
+  pim:    { name: "พิม", rarity: "R", role: "mage", color: "#ff9cc0",
+            look: { skin: "#f3cfb3", hair: "#e07a9a", style: "bob", outfit: "#4a3a7a", accent: "#f2d16b", extra: "#3a2e5e", weapon: "staff", extras: ["hat"] },
+            skill: { name: "ลูกไฟจิ๋ว", kind: "aoe", mult: 1.5 },
+            line: "เวทนี้เพิ่งหัดเมื่อวาน… น่าจะไม่ระเบิดใส่เรานะ" },
+  noi:    { name: "น้อย", rarity: "R", role: "healer", color: "#8fe0c8",
+            look: { skin: "#e9b994", hair: "#2b2233", style: "long", outfit: "#e8e0cc", accent: "#7ac0a8", weapon: "book" },
             skill: { name: "ชาอุ่นใจ", kind: "heal", pct: .28 },
             line: "เจ็บตรงไหนบอกนะ น้อยชงชาสมุนไพรไว้ให้แล้ว" },
-  garnet: { name: "การ์เน็ต", rarity: "SR", role: "defender", gun: "SG", color: "#d6b25a",
-            look: { skin: "#c98f6a", hair: "#3a2a22", style: "bob", outfit: "#3e4a66", accent: "#d6b25a", wood: "#4a3a2a", metal: "#b8b0a0" },
-            skill: { name: "กำแพงเหล็ก", kind: "shield", pct: .25, taunt: 5 },
-            line: "หลบหลังฉันไว้ ไม่มีกระสุนนัดไหนผ่านไปได้" },
-  vex:    { name: "เว็กซ์", rarity: "SR", role: "attacker", gun: "SMG", color: "#e06a8a",
-            look: { skin: "#d8b8c8", hair: "#5a4a8a", style: "hood", outfit: "#2a2a3a", accent: "#c04a6a", extras: ["mask"], wood: "#1e1e28", metal: "#c04a6a" },
-            skill: { name: "พายุกระสุน", kind: "hit", target: "lowest", mult: .9, hits: 6 },
+  garnet: { name: "การ์เน็ต", rarity: "SR", role: "tank", color: "#d6b25a",
+            look: { skin: "#c98f6a", hair: "#3a2a22", style: "bob", outfit: "#3e4a66", accent: "#d6b25a", weapon: "shield" },
+            skill: { name: "กำแพงเหล็ก", kind: "shield", pct: .22, taunt: 5 },
+            line: "ยืนหลังฉันไว้ ไม่มีอะไรผ่านโล่นี้ไปได้" },
+  vex:    { name: "เว็กซ์", rarity: "SR", role: "rogue", color: "#e06a8a",
+            look: { skin: "#d8b8c8", hair: "#5a4a8a", style: "hood", outfit: "#2a2a3a", accent: "#c04a6a", weapon: "dagger", extras: ["mask"] },
+            skill: { name: "เงาสี่คม", kind: "hit", target: "lowest", mult: .95, hits: 4 },
             line: "ค่าจ้างจ่ายเป็นเมล็ดกาแฟก็ได้ ไม่ถามที่มา" },
-  mira:   { name: "มิระ", rarity: "SR", role: "attacker", gun: "AR", color: "#9fdcff",
-            look: { skin: "#f2dde0", hair: "#8fd6ff", style: "long", outfit: "#3a5a9a", accent: "#d9f3ff", wood: "#2a3a5a", metal: "#d9f3ff" },
-            skill: { name: "กระสุนน้ำแข็ง", kind: "aoe", mult: 1.4, slow: 4 },
+  mira:   { name: "มิระ", rarity: "SR", role: "mage", color: "#9fdcff",
+            look: { skin: "#f2dde0", hair: "#8fd6ff", style: "long", outfit: "#3a5a9a", accent: "#d9f3ff", weapon: "staff" },
+            skill: { name: "พายุน้ำแข็ง", kind: "aoe", mult: 1.4, slow: 4 },
             line: "ขอเป็นลาเต้เย็น… เย็นมากๆ นะคะ" },
-  tammy:  { name: "แทมมี่", rarity: "SR", role: "supporter", gun: "MG", color: "#f2c45a",
-            look: { skin: "#b97f5a", hair: "#e0a030", style: "ponytail", outfit: "#a04a3a", accent: "#f2d16b", wood: "#3a2a22", metal: "#e0c890" },
+  tammy:  { name: "แทมมี่", rarity: "SR", role: "bard", color: "#f2c45a",
+            look: { skin: "#b97f5a", hair: "#e0a030", style: "ponytail", outfit: "#a04a3a", accent: "#f2d16b", weapon: "lute" },
             skill: { name: "เพลงปลุกใจ", kind: "buff", atk: .35, dur: 8 },
-            line: "ปืนกลกระบอกนี้เล่นเพลงได้ด้วยนะ ฟังให้ดี!" },
-  ruby:   { name: "รูบี้", rarity: "SSR", role: "attacker", gun: "SG", color: "#ff7a6a",
-            look: { skin: "#d99ad0", hair: "#2a1e24", style: "long", outfit: "#2e2a4a", accent: "#e05a4a", extra: "#d8604a", extra2: "#6a1e2a", wood: "#2a1e2a", metal: "#f0a0b0", extras: ["horns"] },
-            skill: { name: "นรกระยะเผาขน", kind: "hit", target: "front", mult: 4.2, hits: 1, lifesteal: .5 },
+            line: "เพลงนี้แต่งให้ทุกคนที่ยังไม่ยอมแพ้คืนนี้!" },
+  ruby:   { name: "รูบี้", rarity: "SSR", role: "warrior", color: "#ff7a6a",
+            look: { skin: "#d99ad0", hair: "#2a1e24", style: "long", outfit: "#2e2a4a", accent: "#e05a4a", extra: "#d8604a", extra2: "#6a1e2a", metal: "#f0d0e0", weapon: "greatsword", extras: ["horns"] },
+            skill: { name: "ดาบอเวจี", kind: "hit", target: "front", mult: 4.2, hits: 1, lifesteal: .5 },
             line: "อย่ามองเขาข้านานนัก… สั่งเอสเปรสโซ่มาสองช็อตสิ" },
-  kaida:  { name: "ไคดะ", rarity: "SSR", role: "attacker", gun: "RL", color: "#ff9a4a",
-            look: { skin: "#f0c8a8", hair: "#d84a3a", style: "spiky", outfit: "#6a2a2a", accent: "#f0b040", extra: "#a83a3a", wood: "#4a2a22", back: ["wings"] },
+  kaida:  { name: "ไคดะ", rarity: "SSR", role: "warrior", color: "#ff9a4a",
+            look: { skin: "#f0c8a8", hair: "#d84a3a", style: "spiky", outfit: "#6a2a2a", accent: "#f0b040", extra: "#a83a3a", weapon: "spear", back: ["wings"] },
             skill: { name: "ลมหายใจมังกร", kind: "aoe", mult: 2.4, burn: 4 },
             line: "เลือดมังกรร้อนพอจะต้มกาแฟได้ อยากลองไหม?" },
-  elara:  { name: "เอลาร่า", rarity: "SSR", role: "supporter", gun: "AR", color: "#fff0a0",
-            look: { skin: "#f6dcc8", hair: "#f6e6a0", style: "long", outfit: "#f4f0e6", accent: "#ffd76a", extra: "#ffe680", wood: "#c8b890", metal: "#fff8d8", extras: ["halo"] },
+  elara:  { name: "เอลาร่า", rarity: "SSR", role: "healer", color: "#fff0a0",
+            look: { skin: "#f6dcc8", hair: "#f6e6a0", style: "long", outfit: "#f4f0e6", accent: "#ffd76a", extra: "#ffe680", weapon: "staff", extras: ["halo"] },
             skill: { name: "แสงรุ่งอรุณ", kind: "heal", pct: .45, atk: .25, dur: 6 },
             line: "ราตรีจะยาวแค่ไหน แสงก็จะกลับมาเสมอ" },
-  mochi:  { name: "โมจิ", rarity: "SSR", role: "attacker", gun: "SNP", color: "#a8f0d0",
-            look: { skin: "#f2d0b0", hair: "#f4f4f4", style: "bob", outfit: "#3a3a44", accent: "#4f8a5a", wood: "#2a2a30", metal: "#a8f0d0", extras: ["catears", "scarf"], back: ["tail"] },
-            skill: { name: "เหมียวสไนป์หกนัด", kind: "hit", target: "random", mult: 1.4, hits: 6, crit: true },
+  mochi:  { name: "โมจิ", rarity: "SSR", role: "rogue", color: "#a8f0d0",
+            look: { skin: "#f2d0b0", hair: "#f4f4f4", style: "bob", outfit: "#3a3a44", accent: "#4f8a5a", weapon: "katana", extras: ["catears", "scarf"], back: ["tail"] },
+            skill: { name: "ดาบเหมียวพันคม", kind: "hit", target: "random", mult: 1.1, hits: 6, crit: true },
             line: "เมี้ยว… ขอนมอุ่นๆ แก้วนึง แล้วไปลุยกัน" },
 };
-// sprite weapon comes from the gun
-Object.values(HEROES).forEach(h => { h.look.weapon = GUNS[h.gun].sprite; });
 const STARTER_TEAM = ["bell", "fen", "noi"];
 // heroes that were renamed; old saves are moved over on load
 const RENAMED = { bram: "bell", garron: "garnet", tum: "tammy" };
@@ -113,30 +106,39 @@ const GEAR_COLORS = {
   SSR: { o: "#d08a2a", a: "#ffd76a", w: "#6a3a1e", metal: "#fff4c8" },
 };
 
+// trait: shield (hits soak into a shield first), bomber (runs in and explodes), flyer (melee often misses),
+// healer (mends nearby monsters), fast (attacks twice as often, less HP)
+const TRAITS = {
+  shield: { th: "ใส่โล่", tip: "มอนใส่โล่: ต้องตีโล่ให้แตกก่อน สกิลทำลายโล่ได้แรงเป็นสองเท่า" },
+  bomber: { th: "ระเบิด", tip: "มอนระเบิด: จะวิ่งเข้ามาระเบิดใส่ทีม แตะที่มันเพื่อสั่งให้ทุกคนรุมก่อนถึงตัว" },
+  flyer:  { th: "บินได้", tip: "มอนบินได้: นักดาบตีพลาดบ่อย ใช้ธนูกับเวทจะดีกว่า" },
+  healer: { th: "ฮีลเลอร์", tip: "มอนฮีลเลอร์: คอยฟื้นเลือดให้พวก แตะที่มันเพื่อจัดการก่อน" },
+  fast:   { th: "ว่องไว", tip: "มอนว่องไว: ตีเร็วแต่เลือดน้อย" },
+};
 const MONSTERS = {
   slime:   { name: "สไลม์กาแฟ",   kind: "slime",    look: { outfit: "#7a4a2e", accent: "#efe0c4", metal: "#fff" }, hp: 1, atk: 1 },
-  rat:     { name: "หนูท่อ",       kind: "rat",      look: { outfit: "#6a6a7a", accent: "#d88a9a" }, hp: .8, atk: 1.1 },
-  alleycat:{ name: "แมวจรผี",     kind: "cat",      look: { outfit: "#3a3a4a", accent: "#7affb0", eye: "#7affb0" }, hp: .9, atk: 1.2 },
-  shroom:  { name: "เห็ดพิษ",      kind: "mushroom", look: { outfit: "#b04a5a", accent: "#e8dcc8", metal: "#ffe8f0" }, hp: 1.1, atk: .9 },
-  wolf:    { name: "หมาป่าเงา",    kind: "wolf",     look: { outfit: "#4a4a6a", accent: "#8a8aaa", eye: "#ffd84a" }, hp: 1.2, atk: 1.2 },
-  bat:     { name: "ค้างคาวถ้ำ",    kind: "bat",      look: { outfit: "#5a3a6a", eye: "#ff5a5a" }, hp: .7, atk: 1.1 },
-  golem:   { name: "โกเลมหิน",     kind: "golem",    look: { outfit: "#6a6070", accent: "#9af0ff", eye: "#9af0ff" }, hp: 1.6, atk: .9 },
-  ghost:   { name: "วิญญาณหลงทาง",  kind: "ghost",    look: { outfit: "#c8d0f0", eye: "#3a2a5a", metal: "#ffffff" }, hp: .9, atk: 1.2 },
-  skeleton:{ name: "โครงกระดูก",    humanoid: { skin: "#e8e2d0", hair: "#e8e2d0", style: "bald", outfit: "#d8d2c0", accent: "#9a9282", eye: "#ff5a5a", blush: "#e8e2d0", weapon: "sword", extras: ["bones"] }, hp: 1, atk: 1.2 },
-  imp:     { name: "อิมป์",        humanoid: { skin: "#c85a6a", hair: "#3a1e2a", style: "spiky", outfit: "#3a1e2a", accent: "#ffb04a", eye: "#ffd84a", weapon: "claws", extras: ["horns"], back: ["tail"] }, hp: .9, atk: 1.3 },
+  rat:     { name: "หนูพกระเบิด",   kind: "rat",      look: { outfit: "#6a6a7a", accent: "#d88a9a" }, hp: .6, atk: 1, trait: "bomber" },
+  alleycat:{ name: "แมวจรผี",     kind: "cat",      look: { outfit: "#3a3a4a", accent: "#7affb0", eye: "#7affb0" }, hp: .7, atk: .9, trait: "fast" },
+  shroom:  { name: "เห็ดสปอร์",    kind: "mushroom", look: { outfit: "#b04a5a", accent: "#e8dcc8", metal: "#ffe8f0" }, hp: 1, atk: .8, trait: "healer" },
+  wolf:    { name: "หมาป่าเงา",    kind: "wolf",     look: { outfit: "#4a4a6a", accent: "#8a8aaa", eye: "#ffd84a" }, hp: .8, atk: 1.1, trait: "fast" },
+  bat:     { name: "ค้างคาวถ้ำ",    kind: "bat",      look: { outfit: "#5a3a6a", eye: "#ff5a5a" }, hp: .8, atk: 1, trait: "flyer" },
+  golem:   { name: "โกเลมหิน",     kind: "golem",    look: { outfit: "#6a6070", accent: "#9af0ff", eye: "#9af0ff" }, hp: 1.4, atk: .9, trait: "shield" },
+  ghost:   { name: "วิญญาณหลงทาง",  kind: "ghost",    look: { outfit: "#c8d0f0", eye: "#3a2a5a", metal: "#ffffff" }, hp: .9, atk: 1, trait: "flyer" },
+  skeleton:{ name: "อัศวินกระดูก",   humanoid: { skin: "#e8e2d0", hair: "#e8e2d0", style: "bald", outfit: "#d8d2c0", accent: "#9a9282", eye: "#ff5a5a", blush: "#e8e2d0", weapon: "shield", extras: ["bones"] }, hp: 1.1, atk: 1.1, trait: "shield" },
+  imp:     { name: "อิมป์หมอผี",    humanoid: { skin: "#c85a6a", hair: "#3a1e2a", style: "spiky", outfit: "#3a1e2a", accent: "#ffb04a", eye: "#ffd84a", weapon: "staff", extras: ["horns"], back: ["tail"] }, hp: .9, atk: 1, trait: "healer" },
 };
 
 const BOSSES = [
-  { name: "ราชาสไลม์ลาเต้",  kind: "slime", look: { outfit: "#5a3220", accent: "#fff2d8", extra: "#ffd76a", metal: "#fff" } },
-  { name: "จ่าฝูงจันทร์เสี้ยว", kind: "wolf",  look: { outfit: "#2a2a4a", accent: "#c8c8ff", eye: "#ff5a5a", extra: "#ffd76a" } },
-  { name: "โกเลมคริสตัล",    kind: "golem", look: { outfit: "#4a3a7a", accent: "#ff9af0", eye: "#ff9af0", extra: "#ffd76a" } },
-  { name: "ลิชดวงดาว",       humanoid: { skin: "#d8e0ff", hair: "#2a2050", style: "hood", outfit: "#2a2050", accent: "#9fdcff", eye: "#9fdcff", blush: "#d8e0ff", weapon: "staff", extras: ["crown"], back: ["cape"], extra: "#ffd76a", extra2: "#1a1438" } },
+  { name: "ราชาสไลม์ลาเต้",  move: "คลื่นลาเต้ถล่ม", kind: "slime", look: { outfit: "#5a3220", accent: "#fff2d8", extra: "#ffd76a", metal: "#fff" } },
+  { name: "จ่าฝูงจันทร์เสี้ยว", move: "หอนใต้จันทร์", kind: "wolf",  look: { outfit: "#2a2a4a", accent: "#c8c8ff", eye: "#ff5a5a", extra: "#ffd76a" } },
+  { name: "โกเลมคริสตัล",    move: "ฝนคริสตัล", kind: "golem", look: { outfit: "#4a3a7a", accent: "#ff9af0", eye: "#ff9af0", extra: "#ffd76a" } },
+  { name: "ลิชดวงดาว",       move: "ดาวตกพันดวง", humanoid: { skin: "#d8e0ff", hair: "#2a2050", style: "hood", outfit: "#2a2050", accent: "#9fdcff", eye: "#9fdcff", blush: "#d8e0ff", weapon: "staff", extras: ["crown"], back: ["cape"], extra: "#ffd76a", extra2: "#1a1438" } },
 ];
 
 const WORLDS = [
   { name: "ตรอกนีออน",   theme: "alley",  mobs: ["slime", "rat", "alleycat"] },
   { name: "ป่าหิ่งห้อย",  theme: "forest", mobs: ["shroom", "wolf", "bat"] },
-  { name: "ถ้ำคริสตัล",   theme: "cave",   mobs: ["bat", "golem", "slime"] },
+  { name: "ถ้ำคริสตัล",   theme: "cave",   mobs: ["bat", "golem", "rat"] },
   { name: "หอคอยดวงดาว", theme: "tower",  mobs: ["skeleton", "ghost", "imp"] },
 ];
 const STAGES_PER_WORLD = 10;
