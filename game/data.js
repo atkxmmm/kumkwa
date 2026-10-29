@@ -25,10 +25,10 @@ const GUNS = {
 
 // skill kinds: hit (front/lowest/random, hits), aoe, heal, shield, buff. Extras: burn, slow, lifesteal, taunt, crit.
 const HEROES = {
-  bram:   { name: "แบรม", rarity: "R", role: "attacker", gun: "AR", color: "#e0a26a",
-            look: { skin: "#e8b58f", hair: "#7a4a2a", style: "short", outfit: "#5a6b7d", accent: "#c9a24a", wood: "#3a3a44", metal: "#c8ccd8" },
+  bell:   { name: "เบลล์", rarity: "R", role: "attacker", gun: "AR", color: "#e0a26a",
+            look: { skin: "#e8b58f", hair: "#7a4a2a", style: "long", outfit: "#5a6b7d", accent: "#c9a24a", wood: "#3a3a44", metal: "#c8ccd8" },
             skill: { name: "ระดมยิง", kind: "hit", target: "front", mult: 1.1, hits: 5 },
-            line: "กาแฟดำแก้วเดียวก็พอ… ที่เหลือฝากปืนผมเถอะ" },
+            line: "กาแฟดำแก้วเดียวก็พอ… ที่เหลือฝากปืนฉันเถอะ" },
   fen:    { name: "เฟน", rarity: "R", role: "attacker", gun: "SNP", color: "#8fd28a",
             look: { skin: "#f0c7a0", hair: "#3e7d4a", style: "ponytail", outfit: "#4f6b3a", accent: "#a8743a", wood: "#2e3a2a", metal: "#d8e0c8" },
             skill: { name: "นัดเดียวจอด", kind: "hit", target: "lowest", mult: 5, hits: 1, crit: true },
@@ -41,10 +41,10 @@ const HEROES = {
             look: { skin: "#e9b994", hair: "#2b2233", style: "long", outfit: "#e8e0cc", accent: "#7ac0a8", wood: "#3a4448", metal: "#e8f0f0" },
             skill: { name: "ชาอุ่นใจ", kind: "heal", pct: .28 },
             line: "เจ็บตรงไหนบอกนะ น้อยชงชาสมุนไพรไว้ให้แล้ว" },
-  garron: { name: "การ์รอน", rarity: "SR", role: "defender", gun: "SG", color: "#d6b25a",
-            look: { skin: "#c98f6a", hair: "#3a2a22", style: "short", outfit: "#3e4a66", accent: "#d6b25a", extras: ["beard"], wood: "#4a3a2a", metal: "#b8b0a0" },
+  garnet: { name: "การ์เน็ต", rarity: "SR", role: "defender", gun: "SG", color: "#d6b25a",
+            look: { skin: "#c98f6a", hair: "#3a2a22", style: "bob", outfit: "#3e4a66", accent: "#d6b25a", wood: "#4a3a2a", metal: "#b8b0a0" },
             skill: { name: "กำแพงเหล็ก", kind: "shield", pct: .25, taunt: 5 },
-            line: "หลบหลังข้าไว้ ไม่มีกระสุนนัดไหนผ่านไปได้" },
+            line: "หลบหลังฉันไว้ ไม่มีกระสุนนัดไหนผ่านไปได้" },
   vex:    { name: "เว็กซ์", rarity: "SR", role: "attacker", gun: "SMG", color: "#e06a8a",
             look: { skin: "#d8b8c8", hair: "#5a4a8a", style: "hood", outfit: "#2a2a3a", accent: "#c04a6a", extras: ["mask"], wood: "#1e1e28", metal: "#c04a6a" },
             skill: { name: "พายุกระสุน", kind: "hit", target: "lowest", mult: .9, hits: 6 },
@@ -53,8 +53,8 @@ const HEROES = {
             look: { skin: "#f2dde0", hair: "#8fd6ff", style: "long", outfit: "#3a5a9a", accent: "#d9f3ff", wood: "#2a3a5a", metal: "#d9f3ff" },
             skill: { name: "กระสุนน้ำแข็ง", kind: "aoe", mult: 1.4, slow: 4 },
             line: "ขอเป็นลาเต้เย็น… เย็นมากๆ นะคะ" },
-  tum:    { name: "ตั้ม", rarity: "SR", role: "supporter", gun: "MG", color: "#f2c45a",
-            look: { skin: "#b97f5a", hair: "#e0a030", style: "spiky", outfit: "#a04a3a", accent: "#f2d16b", wood: "#3a2a22", metal: "#e0c890" },
+  tammy:  { name: "แทมมี่", rarity: "SR", role: "supporter", gun: "MG", color: "#f2c45a",
+            look: { skin: "#b97f5a", hair: "#e0a030", style: "ponytail", outfit: "#a04a3a", accent: "#f2d16b", wood: "#3a2a22", metal: "#e0c890" },
             skill: { name: "เพลงปลุกใจ", kind: "buff", atk: .35, dur: 8 },
             line: "ปืนกลกระบอกนี้เล่นเพลงได้ด้วยนะ ฟังให้ดี!" },
   ruby:   { name: "รูบี้", rarity: "SSR", role: "attacker", gun: "SG", color: "#ff7a6a",
@@ -70,13 +70,15 @@ const HEROES = {
             skill: { name: "แสงรุ่งอรุณ", kind: "heal", pct: .45, atk: .25, dur: 6 },
             line: "ราตรีจะยาวแค่ไหน แสงก็จะกลับมาเสมอ" },
   mochi:  { name: "โมจิ", rarity: "SSR", role: "attacker", gun: "SNP", color: "#a8f0d0",
-            look: { skin: "#f2d0b0", hair: "#f4f4f4", style: "short", outfit: "#3a3a44", accent: "#4f8a5a", wood: "#2a2a30", metal: "#a8f0d0", extras: ["catears", "scarf"], back: ["tail"] },
+            look: { skin: "#f2d0b0", hair: "#f4f4f4", style: "bob", outfit: "#3a3a44", accent: "#4f8a5a", wood: "#2a2a30", metal: "#a8f0d0", extras: ["catears", "scarf"], back: ["tail"] },
             skill: { name: "เหมียวสไนป์หกนัด", kind: "hit", target: "random", mult: 1.4, hits: 6, crit: true },
             line: "เมี้ยว… ขอนมอุ่นๆ แก้วนึง แล้วไปลุยกัน" },
 };
 // sprite weapon comes from the gun
 Object.values(HEROES).forEach(h => { h.look.weapon = GUNS[h.gun].sprite; });
-const STARTER_TEAM = ["bram", "fen", "noi"];
+const STARTER_TEAM = ["bell", "fen", "noi"];
+// heroes that were renamed; old saves are moved over on load
+const RENAMED = { bram: "bell", garron: "garnet", tum: "tammy" };
 
 const GEAR = {
   // atk / hp / def are % bonuses on the hero's own stats; crit is a flat chance, spd is flat speed.

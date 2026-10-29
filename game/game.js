@@ -59,7 +59,7 @@ function sprite(key) {
   let s;
   if (kind === "hero") { const L = HEROES[id].look; s = build(Pix.humanoid(L), Pix.palette(L)); }
   else if (kind === "rear") { const L = HEROES[id].look; s = build(Pix.humanoid(L, true), Pix.palette(L)); }
-  else if (kind === "master") { const L = { skin: "#e0b090", hair: "#3a2a2a", style: "short", outfit: "#2a2a2a", accent: "#e8e0cc", extras: ["beard"], weapon: "none" }; s = build(Pix.humanoid(L), Pix.palette(L)); }
+  else if (kind === "master") { const L = { skin: "#e0b090", hair: "#3a2a2a", style: "long", outfit: "#2a2a2a", accent: "#e8e0cc", weapon: "none" }; s = build(Pix.humanoid(L), Pix.palette(L)); }
   else if (kind === "gear") { const d = GEAR[id], c = GEAR_COLORS[d.rarity]; s = build(Pix.icon(d.icon), Pix.palette({ outfit: c.o, accent: c.a, wood: c.w, metal: c.metal })); }
   else {
     const d = kind === "boss" ? BOSSES[id] : MONSTERS[id];
@@ -95,10 +95,17 @@ function freshState() {
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) { S = Object.assign(freshState(), JSON.parse(raw)); delete S.farm; delete S.harvests; return true; }
+    if (raw) { S = Object.assign(freshState(), JSON.parse(raw)); delete S.farm; delete S.harvests; migrate(); return true; }
   } catch (e) { /* private mode or broken save: start fresh */ }
   S = freshState();
   return false;
+}
+function migrate() {
+  Object.entries(RENAMED).forEach(([from, to]) => {
+    if (S.heroes[from]) { S.heroes[to] = S.heroes[from]; delete S.heroes[from]; }
+    S.team = S.team.map(id => id === from ? to : id);
+    S.gear.forEach(g => { if (g.by === from) g.by = to; });
+  });
 }
 function save() {
   S.last = Date.now();
@@ -1344,7 +1351,7 @@ function boot() {
       { text: "พอดึกปุ๊บ มอนสเตอร์ก็โผล่ออกมาจากตรอก นักผจญภัยของร้านเลยต้องตั้งแนวยิงหลังกระสอบทราย" },
       { text: "พวกเขายิงกันเองได้ แต่ถ้ากดค้างที่ฉากแล้วลาก เธอจะเล็งเองได้ เล็งหัวแรงกว่านะ" },
       { text: "ทำภารกิจวันนี้ให้ครบจะได้เมล็ดกาแฟไว้ 'ชงเรียก' เพื่อนใหม่ ตอนนี้ให้ไว้ก่อน 1,600 เม็ด ลองดูสิ" },
-      { who: "bram", text: HEROES.bram.line },
+      { who: "bell", text: HEROES.bell.line },
     ], true);
   } else {
     const off = offlineRewards();

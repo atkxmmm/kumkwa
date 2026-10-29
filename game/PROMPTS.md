@@ -1,5 +1,7 @@
 # Prompt สำหรับเจนภาพ (GPT / ChatGPT)
 
+ตัวละครทุกตัวเป็นผู้หญิง (เหมือน NIKKE)
+
 ทุก prompt ก๊อปไปวางได้ทั้งก้อน ไม่ต้องต่ออะไรเพิ่ม เซฟตาม **ชื่อไฟล์** แล้ววางในโฟลเดอร์ `game/assets/...` เกมจะใช้ภาพนั้นแทนภาพพิกเซลเอง ทำทีละภาพก็ได้
 
 ## เคล็ดลับ
@@ -13,9 +15,9 @@
 ## 1. ฮีโร่: ภาพหน้าตรง
 ใช้ในการ์ด กาชา กล่องคำพูด และฉาก BURST · เซฟเป็น `assets/portraits/<ชื่อไฟล์>.png`
 
-### แบรม · R · ไรเฟิล → `bram.png`
+### เบลล์ · R · ไรเฟิล → `bell.png`
 ```
-Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: a calm young man with short messy brown hair, steel-grey adventurer jacket, holding a chunky sci-fi blaster that is clearly a fantasy video game prop, pointed at the ground. Rarity R (common): simple practical outfit, plain colors, few accessories, relaxed pose, plain soft lighting, no special effects. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
+Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: a calm young woman with long brown hair, steel-grey adventurer jacket, holding a chunky sci-fi blaster that is clearly a fantasy video game prop, pointed at the ground. Rarity R (common): simple practical outfit, plain colors, few accessories, relaxed pose, plain soft lighting, no special effects. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
 ```
 
 ### เฟน · R · สไนเปอร์ → `fen.png`
@@ -33,9 +35,9 @@ Half-body character portrait from the waist up, facing the viewer at a slight th
 Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: a gentle young woman with long black hair, cream white medic outfit with mint green details, holding a small compact sci-fi blaster that is clearly a fantasy video game prop, pointed at the ground. Rarity R (common): simple practical outfit, plain colors, few accessories, relaxed pose, plain soft lighting, no special effects. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
 ```
 
-### การ์รอน · SR · ช็อตกัน → `garron.png`
+### การ์เน็ต · SR · ช็อตกัน → `garnet.png`
 ```
-Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: a broad bearded man with short dark hair and tan skin, navy heavy armor with brass plates, holding a wide-barrel fantasy blunderbuss prop pointed at the ground, protective stance. Rarity SR (rare): more detailed outfit with distinctive accessories, confident pose, soft violet rim light, faint purple aura and a few small glowing particles. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
+Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: a tall strong woman with a dark bob haircut and tan skin, navy heavy armor with brass plates, holding a wide-barrel fantasy blunderbuss prop pointed at the ground, protective stance. Rarity SR (rare): more detailed outfit with distinctive accessories, confident pose, soft violet rim light, faint purple aura and a few small glowing particles. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
 ```
 
 ### เว็กซ์ · SR · SMG → `vex.png`
@@ -48,9 +50,9 @@ Half-body character portrait from the waist up, facing the viewer at a slight th
 Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: an elegant woman with long icy light-blue hair, blue coat with frosty white details, holding a sci-fi blaster that glows with magical ice, a fantasy video game prop pointed at the ground. Rarity SR (rare): more detailed outfit with distinctive accessories, confident pose, soft violet rim light, faint purple aura and a few small glowing particles. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
 ```
 
-### ตั้ม · SR · ปืนกล → `tum.png`
+### แทมมี่ · SR · ปืนกล → `tammy.png`
 ```
-Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: an energetic musician with spiky golden hair and brown skin, red jacket, carrying a big steampunk multi-barrel blaster decorated like a guitar, a fantasy video game prop. Rarity SR (rare): more detailed outfit with distinctive accessories, confident pose, soft violet rim light, faint purple aura and a few small glowing particles. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
+Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: an energetic musician girl with a golden ponytail and brown skin, red jacket, carrying a big steampunk multi-barrel blaster decorated like a guitar, a fantasy video game prop. Rarity SR (rare): more detailed outfit with distinctive accessories, confident pose, soft violet rim light, faint purple aura and a few small glowing particles. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
 ```
 
 ### รูบี้ · SSR · ช็อตกัน → `ruby.png`
@@ -70,12 +72,12 @@ Half-body character portrait from the waist up, facing the viewer at a slight th
 
 ### โมจิ · SSR · สไนเปอร์ → `mochi.png`
 ```
-Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: a sleepy cat-eared boy with short white hair, white cat ears and tail, dark grey hoodie with a long green knitted scarf, holding a long sci-fi scope blaster prop resting on his shoulder. Rarity SSR (super rare): ornate luxurious outfit with gold trim and unique details, dramatic dynamic pose, strong golden rim light, glowing aura, sparkles and floating light motes, the most impressive and eye-catching look. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
+Half-body character portrait from the waist up, facing the viewer at a slight three-quarter angle, square 1024x1024, transparent background. Character: a sleepy cat-eared girl with a white bob haircut, white cat ears and tail, dark grey hoodie with a long green knitted scarf, holding a long sci-fi scope blaster prop resting on her shoulder. Rarity SSR (super rare): ornate luxurious outfit with gold trim and unique details, dramatic dynamic pose, strong golden rim light, glowing aura, sparkles and floating light motes, the most impressive and eye-catching look. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
 ```
 
 ### มาสเตอร์ (เจ้าของร้าน) → `master.png`
 ```
-Half-body character portrait from the waist up, facing the viewer, square 1024x1024, transparent background. Character: a quiet bearded café owner with dark hair, black barista shirt and a cream apron, polishing a coffee cup. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
+Half-body character portrait from the waist up, facing the viewer, square 1024x1024, transparent background. Character: a calm elegant café owner woman with long dark hair, black barista shirt and a cream apron, polishing a coffee cup. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
 ```
 
 ## 2. ฮีโร่: ภาพหันหลัง (ตอนยิงหลังกระสอบทราย)

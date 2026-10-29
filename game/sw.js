@@ -1,6 +1,6 @@
 // Bump VERSION whenever any game file changes so phones pick up the new copy.
 // Art in assets/ is cached as it loads; a replaced picture shows up from the second open on.
-const VERSION = "nightguild-v3";
+const VERSION = "nightguild-v4";
 const APP = ["./", "./index.html", "./game.js", "./data.js", "./sprites.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
