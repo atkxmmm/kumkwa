@@ -1608,6 +1608,11 @@ function offlineRewards() {
   return { text: `ระหว่างที่คุณไม่อยู่ ${h ? h + " ชม. " : ""}${m} นาที ทีมปราบมอนไปได้ ${fmt(kills)} ตัว ได้ทอง ${fmt(gold)}${beans ? ` กับเมล็ดกาแฟ ${beans} เม็ด` : ""}` };
 }
 
+// ---------- Gifts ----------
+const GIFTS = [
+  { id: "beans-2026-10-30", beans: 10000, text: "ของขวัญจากร้าน!" },
+];
+
 // ---------- Boot ----------
 function boot() {
   const had = load();
@@ -1631,6 +1636,14 @@ function boot() {
     const off = offlineRewards();
     if (off) { updateWallet(); say([{ text: off.text }]); }
   }
+  // one-time gifts: each id is paid once per save
+  S.gifts = S.gifts || {};
+  GIFTS.forEach(g => {
+    if (S.gifts[g.id]) return;
+    S.gifts[g.id] = true; S.beans += g.beans;
+    updateWallet(); renderPanel();
+    say([{ text: `${g.text} รับเมล็ดกาแฟ ${fmt(g.beans)} เม็ด ไปชงเรียกได้เลย!` }]);
+  });
   save();
   setInterval(save, 10000);
   document.addEventListener("visibilitychange", () => {
