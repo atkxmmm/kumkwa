@@ -55,13 +55,13 @@ function sprite(key) {
   if (SPR[key]) return SPR[key];
   const [kind, id] = key.split(":");
   let s;
-  if (kind === "hero") { const L = HEROES[id].look; s = build(Pix.humanoid(L), Pix.palette(L)); }
+  if (kind === "hero") { const L = HEROES[id].look; s = build(Pix.chibi(L), Pix.palette(L)); }
   else if (kind === "rear") { const L = HEROES[id].look; s = build(Pix.humanoid(L, true), Pix.palette(L)); }
-  else if (kind === "master") { const L = { skin: "#e0b090", hair: "#3a2a2a", style: "long", outfit: "#2a2a2a", accent: "#e8e0cc", weapon: "none" }; s = build(Pix.humanoid(L), Pix.palette(L)); }
+  else if (kind === "master") { const L = { skin: "#e0b090", hair: "#3a2a2a", style: "long", outfit: "#2a2a2a", accent: "#e8e0cc", weapon: "none" }; s = build(Pix.chibi(L), Pix.palette(L)); }
   else if (kind === "gear") { const d = GEAR[id], c = GEAR_COLORS[d.rarity]; s = build(Pix.icon(d.icon), Pix.palette({ outfit: c.o, accent: c.a, wood: c.w, metal: c.metal })); }
   else {
     const d = kind === "boss" ? BOSSES[id] : MONSTERS[id];
-    if (d.humanoid) s = build(Pix.humanoid(d.humanoid), Pix.palette(d.humanoid));
+    if (d.humanoid) s = build(Pix.chibi(d.humanoid), Pix.palette(d.humanoid));
     else s = build(Pix.monster({ kind: d.kind, extras: kind === "boss" ? ["crown"] : [] }), Pix.palette(d.look));
   }
   return (SPR[key] = s);
@@ -795,10 +795,10 @@ function drawMap() {
   const art = ART["bg:" + B.map.theme];
   const cx = Math.round(B.cam.x), cy = Math.round(B.cam.y);
   if (art) {
-    // a generated picture is tiled under the whole map
+    // a generated picture covers the whole map, so the camera shows one part of it
     ctx.imageSmoothingEnabled = true;
-    const tile = 240;
-    for (let y = -(cy % tile); y < LH; y += tile) for (let x = -(cx % tile); x < LW; x += tile) ctx.drawImage(art, x, y, tile, tile);
+    const sx = art.width / MAP_W, sy = art.height / MAP_H;
+    ctx.drawImage(art, cx * sx, cy * sy, LW * sx, LH * sy, 0, 0, LW, LH);
     ctx.imageSmoothingEnabled = false;
   } else ctx.drawImage(B.map.canvas, cx, cy, LW, LH, 0, 0, LW, LH);
   if (B.map.theme === "forest") for (let i = 0; i < 12; i++) {

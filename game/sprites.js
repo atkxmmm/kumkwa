@@ -174,5 +174,62 @@ const Pix = (() => {
     return g;
   }
 
-  return { humanoid, monster, icon, palette, toCanvas, shade };
+  // ---- Chibi: 20x22, big head and eyes, short body, facing right in a 3/4 view ----
+  const C_HAIR = {
+    short(P) { P.rect(3, 1, 14, 4, "h"); P.rect(3, 5, 3, 5, "h"); P.pts([[6, 5], [7, 5], [9, 5], [10, 5], [11, 5], [13, 5], [14, 5]], "h"); P.rect(15, 4, 1, 4, "h"); P.rect(5, 1, 6, 1, "H"); },
+    long(P) { C_HAIR.short(P); P.rect(2, 5, 3, 11, "h"); P.rect(2, 11, 1, 5, "H"); P.rect(15, 5, 2, 7, "h"); },
+    ponytail(P) { C_HAIR.short(P); P.rect(1, 2, 3, 4, "h"); P.rect(0, 5, 2, 8, "h"); P.px(0, 12, "H"); },
+    bob(P) { C_HAIR.short(P); P.rect(3, 5, 2, 7, "h"); P.rect(15, 5, 2, 7, "h"); P.rect(3, 10, 1, 2, "H"); },
+    spiky(P) { C_HAIR.short(P); P.pts([[4, 0], [7, 0], [10, 0], [13, 0], [16, 1], [2, 3]], "h"); },
+    hood(P) { P.rect(3, 1, 14, 4, "O"); P.rect(3, 5, 3, 7, "O"); P.rect(15, 4, 2, 6, "O"); P.rect(6, 5, 9, 1, "h"); P.rect(2, 4, 1, 8, "O"); },
+    bald() {},
+  };
+  const C_EXTRA = {
+    horns(P) { P.pts([[5, 0], [5, 1], [4, 0], [3, 0], [14, 0], [14, 1], [15, 0], [16, 0]], "x"); },
+    catears(P) { P.pts([[4, 0], [4, 1], [5, 1], [15, 0], [15, 1], [14, 1]], "h"); P.pts([[4, 1], [15, 1]], "p"); },
+    halo(P) { P.rect(6, 0, 8, 1, "x"); },
+    hat(P) { P.rect(2, 3, 16, 1, "x"); P.rect(6, 0, 8, 3, "x"); P.px(14, 0, "x"); P.rect(6, 2, 8, 1, "a"); },
+    mask(P) { P.rect(11, 9, 5, 3, "O"); },
+    scarf(P) { P.rect(6, 12, 9, 2, "a"); P.rect(13, 14, 2, 3, "a"); P.px(14, 17, "A"); },
+    beard(P) { P.rect(11, 10, 5, 2, "h"); },
+    crown(P) { P.pts([[7, 0], [9, 0], [11, 0], [13, 0]], "a"); P.rect(7, 1, 7, 1, "a"); },
+    wings(P) { P.rect(1, 11, 4, 5, "x"); P.rect(0, 9, 3, 2, "x"); P.rect(2, 15, 3, 1, "X"); P.rect(1, 13, 1, 2, "X"); },
+    tail(P) { P.rect(2, 17, 4, 1, "h"); P.pts([[1, 16], [1, 15]], "h"); },
+    cape(P) { P.rect(4, 12, 2, 8, "X"); P.px(3, 19, "X"); },
+    bones(P) { P.rect(7, 13, 6, 1, "O"); P.rect(7, 15, 6, 1, "O"); },
+  };
+  const C_WEAPON = {
+    sword(P) { P.rect(16, 7, 1, 9, "W"); P.px(16, 6, "W"); P.rect(15, 15, 3, 1, "a"); P.px(16, 16, "w"); },
+    greatsword(P) { P.rect(16, 4, 1, 11, "W"); P.rect(17, 4, 1, 11, "X"); P.px(16, 3, "W"); P.rect(14, 15, 5, 1, "a"); P.rect(16, 16, 1, 2, "w"); },
+    staff(P) { P.rect(16, 5, 1, 16, "w"); P.rect(15, 2, 3, 3, "a"); P.px(16, 3, "W"); },
+    bow(P) { P.pts([[17, 9], [18, 10], [18, 11], [19, 12], [19, 13], [19, 14], [18, 15], [18, 16], [17, 17]], "w"); P.rect(17, 10, 1, 7, "W"); P.rect(14, 13, 4, 1, "a"); },
+    dagger(P) { P.rect(16, 13, 1, 3, "W"); P.px(16, 16, "a"); },
+    shield(P) { P.rect(14, 12, 5, 7, "a"); P.rect(15, 13, 3, 5, "w"); P.rect(16, 14, 1, 3, "W"); },
+    lute(P) { P.rect(12, 15, 4, 3, "w"); P.px(13, 16, "A"); P.rect(16, 14, 2, 1, "w"); P.px(18, 13, "a"); },
+    book(P) { P.rect(14, 14, 4, 4, "a"); P.rect(16, 14, 1, 4, "W"); },
+    katana(P) { P.pts([[16, 15], [17, 14], [17, 13], [18, 12], [18, 11], [19, 10], [19, 9], [19, 8]], "W"); P.px(16, 16, "a"); P.px(15, 17, "w"); },
+    spear(P) { P.rect(17, 3, 1, 18, "w"); P.pts([[17, 0], [17, 1], [17, 2], [16, 2], [18, 2]], "W"); P.px(17, 3, "a"); },
+    claws(P) { P.pts([[16, 15], [17, 14], [16, 17], [17, 16]], "W"); },
+    none() {},
+  };
+  function chibi(spec) {
+    const g = makeGrid(20, 22), P = painter(g);
+    (spec.back || []).forEach(k => C_EXTRA[k](P));
+    if (spec.style === "long") P.rect(3, 6, 2, 10, "h");
+    P.rect(7, 19, 3, 2, "b"); P.rect(11, 19, 3, 2, "b");
+    P.rect(7, 17, 2, 2, "O"); P.rect(11, 17, 2, 2, "O");
+    P.rect(6, 12, 8, 5, "o"); P.rect(6, 12, 1, 5, "O"); P.rect(6, 15, 8, 1, "a"); P.pts([[9, 12], [10, 12]], "a");
+    P.rect(5, 13, 1, 3, "O"); P.px(5, 16, "S");
+    P.rect(14, 13, 1, 3, "o"); P.px(14, 16, "s");
+    P.rect(4, 2, 12, 10, "s"); P.rect(4, 11, 12, 1, "S");
+    P.rect(9, 7, 2, 2, "e"); P.rect(13, 7, 2, 2, "e"); P.pts([[9, 7], [13, 7]], "W");
+    P.pts([[8, 9], [15, 9]], "p"); P.px(12, 10, "S");
+    C_HAIR[spec.style || "short"](P);
+    (spec.extras || []).forEach(k => C_EXTRA[k](P));
+    C_WEAPON[spec.weapon || "none"](P);
+    outline(g);
+    return g;
+  }
+
+  return { humanoid, chibi, monster, icon, palette, toCanvas, shade };
 })();

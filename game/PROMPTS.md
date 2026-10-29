@@ -80,108 +80,50 @@ Half-body character portrait from the waist up, facing the viewer at a slight th
 Half-body character portrait from the waist up, facing the viewer, square 1024x1024, transparent background. Character: a calm elegant café owner woman with long dark hair, black barista shirt and a cream apron, polishing a coffee cup. Glamorous adult anime heroine, 25 years old, curvy figure, form-fitting stylish outfit, alluring confident smile, tasteful fan-service like a modern fantasy gacha game, fully clothed. Style: pixel art, high-quality modern gacha game look, late-night city mood, warm browns, deep plum and navy shadows, cream highlights, neon green and pink accents, clean dark outlines, soft cel shading, visible square pixels. No text, no logo, no frame, no watermark.
 ```
 
-## 2. ฮีโร่: ภาพเต็มตัวด้านข้าง (ใช้ในฉากต่อสู้)
+## 2. ฮีโร่: ตัว chibi ในฉากต่อสู้
 พิมพ์ต่อในแชทเดียวกับภาพหน้าตรงของตัวนั้น · เซฟเป็น `assets/heroes/<ชื่อไฟล์>.png` (ชื่อเดียวกับภาพหน้าตรง ไม่ต้องทำมาสเตอร์)
 
 ```
-Same character, same outfit and colors, now full body from head to feet, side view facing right, in a ready battle stance with her weapon, like a character sprite in a side-scrolling fantasy RPG battle. Square 1024x1024, transparent background, same pixel art style and same rarity effects.
+Now draw this same character as a small chibi pixel art game sprite: same hair, outfit colors and weapon, full body from head to feet, standing in a battle-ready pose facing right. Style: chibi pixel art like a modern mobile pixel RPG, about 2.5 heads tall, big head and big eyes, small body, bright saturated colors, crisp dark outline, rich detailed shading, 3/4 top-down view, keep the same rarity glow. Single character only, transparent background, square 1024x1024, no text.
 ```
 
-## 3. มอนสเตอร์
-เซฟเป็น `assets/monsters/<ชื่อไฟล์>.png`
+## 3. มอนสเตอร์ (chibi)
+เซฟเป็น `assets/monsters/<ชื่อไฟล์>.png` · แทนคำว่า MONSTER ด้วยคำอธิบายในตาราง
 
-### สไลม์กาแฟ → `slime.png`
 ```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a blob slime made of coffee with milk foam on top, two small eyes. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### หนูท่อ → `rat.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a scruffy grey sewer rat with a pink tail. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
+A single chibi pixel art monster sprite for a mobile pixel RPG: MONSTER. Full body, cute but a little menacing, facing right. Style: chibi pixel art like a modern mobile pixel RPG, about 2.5 heads tall, big head and big eyes, small body, bright saturated colors, crisp dark outline, rich detailed shading, 3/4 top-down view. Transparent background, square 1024x1024, no text.
 ```
 
-### แมวจรผี → `alleycat.png`
+| ไฟล์ | มอน | MONSTER |
+|---|---|---|
+| `slime.png` | สไลม์กาแฟ | a blob slime made of coffee with milk foam on top, two small eyes |
+| `rat.png` | หนูพกระเบิด | a scruffy grey rat carrying a round bomb with a lit fuse |
+| `alleycat.png` | แมวจรผี | a black ghost alley cat with glowing neon green eyes |
+| `shroom.png` | เห็ดสปอร์ | a walking red mushroom puffing glowing green healing spores |
+| `wolf.png` | หมาป่าเงา | a shadowy indigo wolf with yellow eyes |
+| `bat.png` | ค้างคาวถ้ำ | a purple cave bat with red eyes, wings spread, flying |
+| `golem.png` | โกเลมหิน | a stone golem holding a big rock shield, glowing cyan crystals |
+| `ghost.png` | วิญญาณหลงทาง | a pale floating ghost with a wavy tail |
+| `skeleton.png` | อัศวินกระดูก | a skeleton knight with a round shield and red glowing eyes |
+| `imp.png` | อิมป์หมอผี | a small red imp shaman with horns, holding a glowing staff |
+| `boss1.png` | บอส ราชาสไลม์ลาเต้ | a giant king slime made of latte with foam art and a gold crown, boss monster, imposing |
+| `boss2.png` | บอส จ่าฝูงจันทร์เสี้ยว | a huge alpha wolf with dark navy fur, crescent moon mark, red eyes, gold crown, boss monster, imposing |
+| `boss3.png` | บอส โกเลมคริสตัล | a massive purple crystal golem with glowing pink cores and a gold crown, boss monster, imposing |
+| `boss4.png` | บอส ลิชดวงดาว | a hooded lich sorcerer made of starlight, glowing blue eyes, gold crown, holding a staff, boss monster, imposing |
+
+## 4. แผนที่ (ภาพเดียวใช้ทั้งแผนที่)
+ไม่ต้องโปร่งใส · เซฟเป็น `assets/bg/<ชื่อไฟล์>.png` · เกมจะใช้ภาพนี้เป็นพื้นทั้งด่าน กล้องเลื่อนดูทีละส่วน
+
 ```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a black ghost alley cat with glowing neon green eyes. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
+A top-down pixel art RPG map seen from above at a slight angle, like a mobile pixel RPG level, square 1024x1024. A large open walkable area in the middle with a winding path, the edges framed by LOCATION_EDGE, small details scattered on the ground. Location: LOCATION. No characters, no monsters, no text, no UI. Bright saturated colors, crisp detailed pixel art.
 ```
 
-### เห็ดพิษ → `shroom.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a walking red poison mushroom with cream spots and tiny feet. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### หมาป่าเงา → `wolf.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a shadowy indigo wolf with yellow eyes. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### ค้างคาวถ้ำ → `bat.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a purple cave bat with red eyes, wings spread. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### โกเลมหิน → `golem.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a stone golem with glowing cyan crystals in its body. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### วิญญาณหลงทาง → `ghost.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a pale lost ghost with a wavy tail and sad dark eyes. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### โครงกระดูก → `skeleton.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a skeleton warrior with red glowing eyes holding a rusty sword. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### อิมป์ → `imp.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a small red imp with horns, claws and a thin tail, mischievous grin. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### บอส: ราชาสไลม์ลาเต้ → `boss1.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a giant king slime made of latte with foam art on top and a small gold crown, boss monster, imposing. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### บอส: จ่าฝูงจันทร์เสี้ยว → `boss2.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a huge alpha wolf with dark navy fur, a crescent moon mark, red eyes and a gold crown, boss monster, imposing. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### บอส: โกเลมคริสตัล → `boss3.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a massive purple crystal golem with glowing pink cores and a gold crown, boss monster, imposing. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### บอส: ลิชดวงดาว → `boss4.png`
-```
-A single full-body monster, front view, slightly menacing but cute, square 1024x1024, transparent background. Monster: a hooded lich sorcerer made of starlight, dark navy robe, glowing blue eyes, gold crown, holding a staff, boss monster, imposing. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-## 4. ฉากหลัง
-ไม่ต้องโปร่งใส · เซฟเป็น `assets/bg/<ชื่อไฟล์>.png`
-
-### ตรอกนีออน → `alley.png`
-```
-Background scene only, no characters, square 1024x1024. First-person view looking down toward the horizon; the horizon line sits about one third from the top and the lower two thirds is empty open ground receding into the distance. Location: a narrow brick alley at midnight behind a small café, warm hanging lamps, a green neon coffee cup sign, wet pavement. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### ป่าหิ่งห้อย → `forest.png`
-```
-Background scene only, no characters, square 1024x1024. First-person view looking down toward the horizon; the horizon line sits about one third from the top and the lower two thirds is empty open ground receding into the distance. Location: a dark teal forest clearing at night under a big moon, fireflies, dirt path. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### ถ้ำคริสตัล → `cave.png`
-```
-Background scene only, no characters, square 1024x1024. First-person view looking down toward the horizon; the horizon line sits about one third from the top and the lower two thirds is empty open ground receding into the distance. Location: a deep cave with glowing purple and cyan crystals, stalactites, stone floor. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
-
-### หอคอยดวงดาว → `tower.png`
-```
-Background scene only, no characters, square 1024x1024. First-person view looking down toward the horizon; the horizon line sits about one third from the top and the lower two thirds is empty open ground receding into the distance. Location: the courtyard of a tall star-gazing tower under a starry night sky, golden windows, stone tiles. Style: pixel art, high-quality modern indie visual novel look, late-night café mood, limited palette of warm brick browns, deep plum and navy shadows, soft cream highlights, small neon green and pink accents, clean dark 1px outlines, soft cel shading, visible square pixels, slightly mature anime proportions (not chibi). Friendly cozy game character art. No text, no logo, no frame, no watermark.
-```
+| ไฟล์ | ฉาก | LOCATION | LOCATION_EDGE |
+|---|---|---|---|
+| `alley.png` | ตรอกนีออน | a cobblestone town square at night behind a cozy café, warm street lamps, crates, neon signs, puddles | brick buildings and rooftops |
+| `forest.png` | ป่าหิ่งห้อย | a forest clearing at night with fireflies, mossy grass, flowers, mushrooms, stone lanterns | dense pine trees and ruins |
+| `cave.png` | ถ้ำคริสตัล | a crystal cave floor with glowing purple and cyan crystals, stone tiles, small pools | jagged rock walls |
+| `tower.png` | หอคอยดวงดาว | the rooftop courtyard of a star-gazing tower at night with rune circles on the floor and star patterns | stone pillars and railings under a starry sky |
 
 ## 5. ไอคอนอุปกรณ์ (ไม่จำเป็น)
 เซฟเป็น `assets/gear/<ชื่อไฟล์>.png` · แทนคำว่า ITEM และ TIER ใน prompt นี้
