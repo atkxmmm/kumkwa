@@ -1,4 +1,4 @@
-// กิลด์ยามดึก: cover shooter gacha with a little farm on the side.
+// กิลด์ยามดึก: cover shooter gacha with daily quests.
 // Sim runs in fixed logical pixels (LW x LH); the canvas is scaled by a whole number so pixels stay crisp.
 // Monsters walk in from the horizon, the squad shoots from behind sandbags at the bottom.
 "use strict";
@@ -42,7 +42,6 @@ function loadAllArt() {
   BOSSES.forEach((_, i) => loadArt("boss:" + i, `assets/monsters/boss${i + 1}.png`));
   WORLDS.forEach(w => loadArt("bg:" + w.theme, `assets/bg/${w.theme}.png`));
   Object.keys(GEAR).forEach(id => loadArt("gear:" + id, `assets/gear/${id}.png`));
-  Object.keys(CROPS).forEach(id => loadArt("crop:" + id, `assets/crops/${id}.png`));
   loadArt("portrait:master", "assets/portraits/master.png");
 }
 
@@ -56,13 +55,12 @@ function build(g, pal, flipToo) {
 }
 function sprite(key) {
   if (SPR[key]) return SPR[key];
-  const [kind, id, extra] = key.split(":");
+  const [kind, id] = key.split(":");
   let s;
   if (kind === "hero") { const L = HEROES[id].look; s = build(Pix.humanoid(L), Pix.palette(L)); }
   else if (kind === "rear") { const L = HEROES[id].look; s = build(Pix.humanoid(L, true), Pix.palette(L)); }
   else if (kind === "master") { const L = { skin: "#e0b090", hair: "#3a2a2a", style: "short", outfit: "#2a2a2a", accent: "#e8e0cc", extras: ["beard"], weapon: "none" }; s = build(Pix.humanoid(L), Pix.palette(L)); }
   else if (kind === "gear") { const d = GEAR[id], c = GEAR_COLORS[d.rarity]; s = build(Pix.icon(d.icon), Pix.palette({ outfit: c.o, accent: c.a, wood: c.w, metal: c.metal })); }
-  else if (kind === "crop") { s = build(Pix.crop(id, +extra), Pix.palette(CROPS[id].look)); }
   else {
     const d = kind === "boss" ? BOSSES[id] : MONSTERS[id];
     if (d.humanoid) s = build(Pix.humanoid(d.humanoid), Pix.palette(d.humanoid), true);
@@ -79,10 +77,6 @@ function gearPic(id) {
   const a = ART["gear:" + id];
   return a ? { src: a.src, art: true } : { src: sprite("gear:" + id).url, art: false };
 }
-function cropPic(id, stage) {
-  const a = stage === 3 && ART["crop:" + id];
-  return a ? { src: a.src, art: true } : { src: sprite(`crop:${id}:${stage}`).url, art: false };
-}
 const imgTag = (p, cls = "") => `<img class="${cls} ${p.art ? "art" : "pix"}" src="${p.src}" alt="">`;
 
 // ---------- Save ----------
@@ -94,14 +88,14 @@ function freshState() {
     v: 1, gold: 50, beans: 1600, stage: 1, best: 1, autoNext: true, auto: true, speed: 1,
     heroes, team: [...STARTER_TEAM], gear: [], uid: 1,
     pity: { hero: 0, gear: 0 }, free: { hero: "", gear: "" },
-    farm: { plots: Array(FARM_START).fill(null), last: "lettuce" },
-    last: Date.now(), introDone: false, aimTip: false, kills: 0, pulls: 0, harvests: 0,
+    daily: null,
+    last: Date.now(), introDone: false, aimTip: false, kills: 0, pulls: 0,
   };
 }
 function load() {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    if (raw) { S = Object.assign(freshState(), JSON.parse(raw)); return true; }
+    if (raw) { S = Object.assign(freshState(), JSON.parse(raw)); delete S.farm; delete S.harvests; return true; }
   } catch (e) { /* private mode or broken save: start fresh */ }
   S = freshState();
   return false;
@@ -285,7 +279,7 @@ function healHero(u, amt) {
 }
 function killFoe(f) {
   f.hp = 0; f.dead = true; f.dying = .45;
-  S.gold += f.gold; S.kills++;
+  S.gold += f.gold; S.kills++; bump("kills");
   const b = foeBox(f);
   addNum(f.x, b.y - 8, "+" + fmt(f.gold) + "G", "#ffcb52");
   burst(f.x, b.y + b.h / 2, "#ffcb52", f.boss ? 24 : 8, f.boss ? 1.6 : 1);
@@ -390,6 +384,7 @@ function enemyShot(f, h, dmg) {
 function castSkill(u) {
   if (u.dead || u.energy < 100 || B.cutin || B.state !== "fight" || !alive(B.foes).length) return;
   u.energy = 0;
+  bump("bursts");
   B.cutin = { t: 0, dur: .75, u, sk: HEROES[u.id].skill };
   renderParty();
 }
@@ -462,6 +457,7 @@ function step(dt) {
 function afterClear() {
   const n = S.stage;
   const bonus = killGold(n) * 6;
+  bump("clears");
   S.gold += bonus;
   let beans = 0;
   if (n >= S.best) {
@@ -784,7 +780,7 @@ cv.addEventListener("pointerdown", e => {
 cv.addEventListener("pointermove", e => { if (AIM.on) aimFrom(e); });
 ["pointerup", "pointercancel", "lostpointercapture"].forEach(ev => cv.addEventListener(ev, () => { AIM.on = false; }));
 
-let lastT = 0, uiAcc = 0, farmAcc = 0;
+let lastT = 0, uiAcc = 0, questAcc = 0;
 function frame(now) {
   const dt = Math.min(.05, (now - lastT) / 1000 || 0);
   lastT = now;
@@ -792,9 +788,9 @@ function frame(now) {
   // two half steps at x2 keep timers as smooth as x1
   if (S.speed > 1) { step(sdt / 2); step(sdt / 2); } else step(sdt);
   draw();
-  uiAcc += dt; farmAcc += dt;
+  uiAcc += dt; questAcc += dt;
   if (uiAcc > .1) { uiAcc = 0; renderParty(); }
-  if (farmAcc > 1) { farmAcc = 0; farmTick(); }
+  if (questAcc > 1) { questAcc = 0; questDot(); }
   requestAnimationFrame(frame);
 }
 
@@ -848,7 +844,6 @@ function renderPanel() {
   if (TAB === "adv") p.innerHTML = advPanel();
   else if (TAB === "team") p.innerHTML = teamPanel();
   else if (TAB === "gear") p.innerHTML = gearPanel();
-  else if (TAB === "farm") p.innerHTML = farmPanel();
   else p.innerHTML = gachaPanel();
   document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === TAB));
   updateWallet();
@@ -882,6 +877,7 @@ function advPanel() {
       <label class="switch"><input type="checkbox" data-act="autoNext" ${S.autoNext ? "checked" : ""}><span></span>ผ่านแล้วไปด่านถัดไปเอง</label>
       ${S.stage < S.best ? `<button class="btn wide" data-act="goBest">ลุยด่าน ${stageName(S.best)} ต่อ</button>` : ""}
     </div>
+    ${questCard()}
     <div class="card">
       <div class="card-h"><span>อัพเลเวลทีม</span><button class="btn sm ghost" data-act="lvAll">อัพทุกคน</button></div>
       ${rows}
@@ -894,7 +890,7 @@ function teamPanel() {
     const id = S.team[i];
     if (!id) return `<button class="slot empty" data-act="slot" data-i="${i}">+<small>ว่าง</small></button>`;
     const h = HEROES[id];
-    return `<button class="slot" data-act="hero" data-id="${id}" style="--c:${h.color}">
+    return `<button class="slot r-${h.rarity}b" data-act="hero" data-id="${id}" style="--c:${h.color}">
       <span class="slot-n">${["ซ้าย", "กลาง", "ขวา"][i]}</span>
       ${imgTag(heroPic(id))}<b>${h.name}</b><small>${GUNS[h.gun].th} · Lv ${S.heroes[id].lv}</small></button>`;
   }).join("");
@@ -967,85 +963,40 @@ function gachaPanel() {
   return `
     ${banner("hero", "ชงเรียกนักผจญภัย", "ชงกาแฟหนึ่งแก้ว เรียกฮีโร่หนึ่งคน ได้ซ้ำ = ดาวเพิ่ม", COST.heroPull, COST.heroPull10, heroIcons)}
     ${banner("gear", "กล่องของช่างตีเหล็ก", "อาวุธเสริม เกราะ เครื่องราง อัพเลเวลด้วยทอง", COST.gearPull, COST.gearPull10, gearIcons)}
-    <p class="hint">สุ่ม ×10 การันตีอย่างน้อย SR 1 ชิ้น · เมล็ดกาแฟได้จากการผ่านด่านครั้งแรก ต้นกาแฟในฟาร์ม และตอนปิดแอปไว้</p>`;
+    <p class="hint">สุ่ม ×10 การันตีอย่างน้อย SR 1 ชิ้น · เมล็ดกาแฟได้จากภารกิจวันนี้ การผ่านด่านครั้งแรก และตอนปิดแอปไว้</p>`;
 }
 
-// ---------- Farm ----------
-function plotState(p) {
-  if (!p) return { stage: -1 };
-  const c = CROPS[p.c], total = c.time * 1000, end = p.t + total - (p.cut || 0);
-  const left = (end - Date.now()) / 1000, prog = 1 - left * 1000 / total;
-  return { stage: left <= 0 ? 3 : prog < .1 ? 0 : prog < .55 ? 1 : 2, left, ripe: left <= 0 };
+// ---------- Daily quests: the steady source of coffee beans ----------
+const QUESTS = [
+  { k: "kills",  need: 150, beans: 60, text: n => `ยิงมอน ${n} ตัว` },
+  { k: "clears", need: 5,   beans: 60, text: n => `ผ่านด่าน ${n} ครั้ง` },
+  { k: "bursts", need: 15,  beans: 40, text: n => `ใช้ BURST ${n} ครั้ง` },
+  { k: "pulls",  need: 1,   beans: 30, text: () => "ชงเรียก 1 ครั้ง (ใช้สุ่มฟรีก็ได้)" },
+];
+const ALL_DONE_BEANS = 60;
+function daily() {
+  if (!S.daily || S.daily.day !== today()) S.daily = { day: today(), kills: 0, clears: 0, bursts: 0, pulls: 0, claimed: {} };
+  return S.daily;
 }
-const cropGold = id => Math.round((CROPS[id].gold || 0) * killGold(S.best));
-const seedCost = id => Math.round(CROPS[id].cost * killGold(S.best));
-function cropReward(id) {
-  const c = CROPS[id], g = cropGold(id);
-  return [g ? `<span class="coin"></span>${fmt(g)}` : "", c.beans ? `<span class="bean"></span>${c.beans}` : ""].filter(Boolean).join(" ");
-}
-function farmPanel() {
-  const plots = S.farm.plots.map((p, i) => {
-    const st = plotState(p);
-    if (!p) return `<button class="plot empty" data-act="plant" data-i="${i}"><span class="soil"></span><small>ปลูก</small></button>`;
-    const c = CROPS[p.c];
-    return `<button class="plot ${st.ripe ? "ripe" : ""}" data-act="plot" data-i="${i}" data-stage="${st.stage}">
-      <span class="soil">${imgTag(cropPic(p.c, st.stage))}</span>
-      <b>${c.name}</b>
-      <small class="left">${st.ripe ? "เก็บได้!" : fmtTime(st.left)}</small>
-      ${!st.ripe && !p.w ? '<span class="drop" title="รดน้ำได้">💧</span>' : ""}
-    </button>`;
-  });
-  if (S.farm.plots.length < FARM_MAX) plots.push(`<button class="plot buy" data-act="buyPlot" ${S.gold < plotCost(S.farm.plots.length + 1) ? "disabled" : ""}><span class="soil">+</span><small>ขยายแปลง<br><span class="coin"></span>${fmt(plotCost(S.farm.plots.length + 1))}</small></button>`);
-  const ripe = S.farm.plots.filter(p => plotState(p).ripe).length;
-  const empty = S.farm.plots.filter(p => !p).length;
-  const last = CROPS[S.farm.last];
-  return `
-    <div class="farm">
-      <div class="farm-h"><b>สวนหลังร้าน</b><small>ผักโตตามเวลาจริง ปิดแอปไว้ก็โต</small></div>
-      <div class="plots">${plots.join("")}</div>
-      <div class="farm-btns">
-        <button class="btn" data-act="harvestAll" ${ripe ? "" : "disabled"}>เก็บทั้งหมด${ripe ? ` (${ripe})` : ""}</button>
-        <button class="btn ghost" data-act="replant" ${empty ? "" : "disabled"}>ปลูก${last.name}ทุกแปลงว่าง</button>
-      </div>
-    </div>
-    <p class="hint">แตะผักที่ยังไม่โตเพื่อรดน้ำ (แปลงละครั้ง ลดเวลาที่เหลือ 30%) · ผักขายได้ทองตามด่านไกลสุดที่ไปถึง · ต้นกาแฟให้เมล็ดกาแฟไว้ชงเรียก</p>`;
-}
-function seedSheet(i) {
-  const list = Object.keys(CROPS).map(id => {
-    const c = CROPS[id], locked = S.best <= c.unlock, cost = seedCost(id);
-    return `<button class="row btnrow" data-act="sow" data-i="${i}" data-id="${id}" ${locked || S.gold < cost ? "disabled" : ""}>
-      <span class="thumb">${imgTag(cropPic(id, 3))}</span>
-      <span class="grow"><b>${c.name}</b><br><small>${locked ? `ปลดล็อกเมื่อผ่านด่าน ${stageName(c.unlock)}` : `โตใน ${fmtTime(c.time)} · ได้ ${cropReward(id)}`}</small></span>
-      <span class="price"><span class="coin"></span>${fmt(cost)}</span>
-    </button>`;
+function bump(k, n = 1) { daily()[k] += n; }
+const questClaimable = () => { const d = daily(); return QUESTS.some((q, i) => d[q.k] >= q.need && !d.claimed[i]) || (QUESTS.every((q, i) => d.claimed[i]) && !d.claimed.all); };
+function questDot() { document.querySelector('.tabs [data-tab="adv"]').classList.toggle("dot", questClaimable()); }
+function questCard() {
+  const d = daily();
+  const rows = QUESTS.map((q, i) => {
+    const v = Math.min(d[q.k], q.need), done = v >= q.need;
+    return `<div class="quest ${d.claimed[i] ? "claimed" : ""}">
+      <span class="grow">${q.text(q.need)}<span class="qbar"><i style="width:${100 * v / q.need}%"></i></span></span>
+      ${d.claimed[i] ? `<span class="qdone">รับแล้ว</span>`
+        : `<button class="btn sm ${done ? "gold" : ""}" data-act="claim" data-q="${i}" ${done ? "" : "disabled"}>${done ? "รับ" : `${v}/${q.need}`} <span class="bean"></span>${q.beans}</button>`}
+    </div>`;
   }).join("");
-  openSheet(`<div class="card-h"><span>เลือกเมล็ดพันธุ์</span><button class="btn sm ghost" data-act="close">ปิด</button></div>${list}`);
-}
-function sow(i, id) {
-  const cost = seedCost(id);
-  if (S.gold < cost || S.farm.plots[i]) return false;
-  S.gold -= cost;
-  S.farm.plots[i] = { c: id, t: Date.now(), cut: 0, w: false };
-  S.farm.last = id;
-  return true;
-}
-function harvest(i) {
-  const p = S.farm.plots[i], c = CROPS[p.c], g = cropGold(p.c);
-  S.gold += g; S.beans += c.beans || 0; S.harvests++;
-  S.farm.plots[i] = null;
-  return { g, b: c.beans || 0 };
-}
-let farmSig = "";
-function farmTick() {
-  const sig = S.farm.plots.map(p => plotState(p).stage).join();
-  const ripe = S.farm.plots.some(p => plotState(p).ripe);
-  document.querySelector('.tabs [data-tab="farm"]').classList.toggle("dot", ripe);
-  if (TAB !== "farm") return;
-  if (sig !== farmSig) { farmSig = sig; renderPanel(); return; }
-  document.querySelectorAll(".plot[data-i]").forEach(el => {
-    const st = plotState(S.farm.plots[+el.dataset.i]), left = el.querySelector(".left");
-    if (left) left.textContent = st.ripe ? "เก็บได้!" : fmtTime(st.left);
-  });
+  const all = QUESTS.every((q, i) => d.claimed[i]);
+  return `<div class="card">
+    <div class="card-h"><span>ภารกิจวันนี้</span><small>รีเซ็ตเที่ยงคืน</small></div>
+    ${rows}
+    <div class="quest"><span class="grow"><b>ทำครบทุกข้อ</b></span>${d.claimed.all ? `<span class="qdone">รับแล้ว</span>` : `<button class="btn sm ${all ? "gold" : ""}" data-act="claim" data-q="all" ${all ? "" : "disabled"}>รับ <span class="bean"></span>${ALL_DONE_BEANS}</button>`}</div>
+  </div>`;
 }
 
 // ---------- Sheets (bottom modals) ----------
@@ -1130,7 +1081,7 @@ function pickGearSheet(heroId, slot) {
 function menuSheet() {
   openSheet(`
     <div class="card-h"><span>กิลด์ยามดึก</span></div>
-    <p class="hint">ล้มมอนไปแล้ว ${fmt(S.kills)} ตัว · ชงเรียกไปแล้ว ${fmt(S.pulls)} ครั้ง · เก็บผักไปแล้ว ${fmt(S.harvests)} ครั้ง</p>
+    <p class="hint">ล้มมอนไปแล้ว ${fmt(S.kills)} ตัว · ชงเรียกไปแล้ว ${fmt(S.pulls)} ครั้ง</p>
     <p class="hint">อยากเปลี่ยนภาพเป็นภาพที่เจนเอง: วางไฟล์ PNG ในโฟลเดอร์ <code>game/assets/</code> ตามชื่อใน <code>PROMPTS.md</code> เกมจะใช้ภาพนั้นแทนให้เอง</p>
     <div class="sheet-btns"><button class="btn ghost" data-act="reset">เริ่มเกมใหม่ (ลบเซฟ)</button><button class="btn" data-act="close">ปิด</button></div>`);
 }
@@ -1215,34 +1166,13 @@ const ACT = {
   },
   gf: el => { gearFilter = el.dataset.k; renderPanel(); },
   pull: el => pull(el.dataset.k, +el.dataset.n, !!el.dataset.free),
-  plant: el => seedSheet(+el.dataset.i),
-  sow: el => { if (!sow(+el.dataset.i, el.dataset.id)) return toast("ทองไม่พอ"); save(); closeSheet(); renderPanel(); },
-  plot: el => {
-    const i = +el.dataset.i, p = S.farm.plots[i], st = plotState(p);
-    if (st.ripe) { const r = harvest(i); toast(`เก็บ${CROPS[p.c].name} +${fmt(r.g)} ทอง${r.b ? ` +${r.b} เมล็ดกาแฟ` : ""}`); }
-    else if (!p.w) { p.w = true; p.cut += st.left * 1000 * .3; toast(`รดน้ำ${CROPS[p.c].name}แล้ว โตไวขึ้น`); }
-    else return toast(`อีก ${fmtTime(st.left)} ก็เก็บได้`);
-    save(); updateWallet(); renderPanel();
-  },
-  harvestAll: () => {
-    let g = 0, b = 0, n = 0;
-    S.farm.plots.forEach((p, i) => { if (plotState(p).ripe) { const r = harvest(i); g += r.g; b += r.b; n++; } });
-    toast(`เก็บ ${n} แปลง +${fmt(g)} ทอง${b ? ` +${b} เมล็ดกาแฟ` : ""}`);
-    save(); updateWallet(); renderPanel();
-  },
-  replant: () => {
-    const id = S.farm.last;
-    if (S.best <= CROPS[id].unlock) return toast("ยังปลูกอันนี้ไม่ได้");
-    let n = 0;
-    S.farm.plots.forEach((p, i) => { if (!p && sow(i, id)) n++; });
-    toast(n ? `ปลูก${CROPS[id].name} ${n} แปลง` : "ทองไม่พอ");
-    save(); renderPanel();
-  },
-  buyPlot: () => {
-    const c = plotCost(S.farm.plots.length + 1);
-    if (S.gold < c) return toast("ทองไม่พอ");
-    S.gold -= c; S.farm.plots.push(null);
-    save(); renderPanel();
+  claim: el => {
+    const d = daily(), k = el.dataset.q;
+    if (d.claimed[k]) return;
+    const beans = k === "all" ? ALL_DONE_BEANS : QUESTS[+k].beans;
+    d.claimed[k] = true; S.beans += beans;
+    toast(`+${beans} เมล็ดกาแฟ`);
+    save(); updateWallet(); renderPanel(); questDot();
   },
   reset: el => {
     // two taps instead of confirm(), which some app views silently refuse
@@ -1266,7 +1196,7 @@ document.addEventListener("change", e => {
 });
 // the scene shrinks on menu tabs so lists have room, and grows back on the adventure tab
 function setTab(t) {
-  TAB = t; farmSig = "";
+  TAB = t;
   document.body.classList.toggle("compact", t !== "adv");
   resize(); renderPanel(); $("#panel").scrollTop = 0;
 }
@@ -1301,7 +1231,7 @@ function pull(k, n, free) {
   const rs = Array.from({ length: n }, () => rollRarity(k));
   if (n === 10 && rs.every(r => r === "R")) rs[9] = "SR";
   const results = rs.map(r => k === "hero" ? grantHero(r) : grantGear(r));
-  S.pulls += n;
+  S.pulls += n; bump("pulls", n);
   save(); updateWallet(); refreshParty(); renderPanel();
   showGacha(k, results);
 }
@@ -1413,7 +1343,7 @@ function boot() {
       { text: "ยินดีต้อนรับสู่ 'กิลด์ยามดึก' ร้านกาแฟที่เปิดเฉพาะตอนเมืองหลับ" },
       { text: "พอดึกปุ๊บ มอนสเตอร์ก็โผล่ออกมาจากตรอก นักผจญภัยของร้านเลยต้องตั้งแนวยิงหลังกระสอบทราย" },
       { text: "พวกเขายิงกันเองได้ แต่ถ้ากดค้างที่ฉากแล้วลาก เธอจะเล็งเองได้ เล็งหัวแรงกว่านะ" },
-      { text: "หลังร้านมีสวนเล็กๆ ปลูกผักไว้ขายได้ ปลูกต้นกาแฟก็ได้เมล็ดไว้ 'ชงเรียก' เพื่อนใหม่ ให้ไว้ 1,600 เม็ด ลองดูสิ" },
+      { text: "ทำภารกิจวันนี้ให้ครบจะได้เมล็ดกาแฟไว้ 'ชงเรียก' เพื่อนใหม่ ตอนนี้ให้ไว้ก่อน 1,600 เม็ด ลองดูสิ" },
       { who: "bram", text: HEROES.bram.line },
     ], true);
   } else {

@@ -174,26 +174,5 @@ const Pix = (() => {
     return g;
   }
 
-  // ---- Crops: 16x16, stage 0 seed → 3 ripe ----
-  function crop(kind, stage) {
-    const g = makeGrid(16, 16), P = painter(g);
-    if (stage === 0) { P.pts([[5, 12], [8, 13], [11, 12]], "w"); }
-    else if (stage === 1) { P.rect(7, 10, 1, 4, "h"); P.pts([[6, 9], [5, 9], [8, 9], [9, 8]], "h"); }
-    else if (stage === 2) { P.rect(7, 7, 1, 7, "h"); P.rect(4, 8, 3, 2, "h"); P.rect(8, 6, 3, 2, "h"); P.rect(5, 11, 2, 1, "H"); P.rect(8, 10, 3, 1, "H"); }
-    else {
-      const R = {
-        lettuce() { P.rect(4, 7, 8, 7, "o"); P.rect(5, 6, 6, 1, "o"); P.rect(6, 8, 4, 5, "a"); P.rect(7, 9, 1, 4, "W"); },
-        carrot() { P.rect(6, 9, 4, 3, "o"); P.rect(7, 12, 2, 2, "o"); P.pts([[6, 6], [7, 5], [8, 6], [9, 5], [7, 7], [8, 7], [8, 8], [7, 8]], "h"); P.px(7, 10, "A"); },
-        tomato() { P.rect(7, 2, 1, 12, "h"); P.rect(4, 6, 3, 3, "o"); P.rect(9, 4, 3, 3, "o"); P.rect(8, 9, 3, 3, "o"); P.pts([[5, 6], [10, 4], [9, 9]], "W"); P.pts([[6, 5], [11, 3]], "h"); },
-        coffee() { P.rect(7, 3, 2, 11, "w"); P.rect(3, 4, 4, 3, "h"); P.rect(9, 6, 4, 3, "h"); P.rect(4, 9, 3, 2, "h"); P.pts([[5, 7], [6, 7], [10, 9], [11, 9], [5, 11], [9, 5]], "o"); },
-        strawberry() { P.rect(3, 9, 10, 2, "h"); P.rect(5, 6, 3, 4, "o"); P.rect(9, 7, 3, 4, "o"); P.rect(6, 10, 1, 1, "o"); P.pts([[6, 7], [10, 8], [5, 8]], "W"); P.pts([[6, 5], [10, 6]], "h"); },
-        pumpkin() { P.rect(3, 8, 10, 6, "o"); P.rect(4, 7, 8, 1, "o"); P.rect(6, 8, 1, 6, "O"); P.rect(9, 8, 1, 6, "O"); P.rect(7, 5, 2, 2, "h"); P.px(4, 9, "W"); },
-      };
-      R[kind]();
-    }
-    outline(g);
-    return g;
-  }
-
-  return { humanoid, monster, icon, crop, palette, toCanvas, shade };
+  return { humanoid, monster, icon, palette, toCanvas, shade };
 })();

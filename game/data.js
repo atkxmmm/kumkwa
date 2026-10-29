@@ -146,14 +146,3 @@ const COST = {
   pity: 60,
 };
 
-// Farm. Gold crops pay in multiples of the gold one monster gives at your best stage, so they never fall behind.
-const CROPS = {
-  lettuce:    { name: "ผักกาดหอม",   time: 60,        unlock: 1,  cost: 2,  gold: 9,   look: { outfit: "#8ad86a", accent: "#c8f0a0", hair: "#4a9a4a", metal: "#e8ffd8", wood: "#6a4a32" } },
-  carrot:     { name: "แครอท",      time: 5 * 60,    unlock: 3,  cost: 6,  gold: 45,  look: { outfit: "#f08a3a", accent: "#f0b060", hair: "#4a9a4a", wood: "#6a4a32" } },
-  tomato:     { name: "มะเขือเทศ",   time: 20 * 60,   unlock: 6,  cost: 15, gold: 170, look: { outfit: "#e04a4a", hair: "#3a8a3a", metal: "#ffb0a0", wood: "#6a4a32" } },
-  coffee:     { name: "ต้นกาแฟ",     time: 60 * 60,   unlock: 8,  cost: 30, beans: 35, look: { outfit: "#c03a3a", hair: "#2a6a3a", wood: "#5a3a22" } },
-  strawberry: { name: "สตรอว์เบอร์รี", time: 3 * 3600, unlock: 15, cost: 60, beans: 90, gold: 300, look: { outfit: "#ff5a7a", hair: "#3a8a4a", metal: "#fff0a0", wood: "#6a4a32" } },
-  pumpkin:    { name: "ฟักทองยักษ์",  time: 8 * 3600,  unlock: 25, cost: 120, beans: 220, gold: 900, look: { outfit: "#f0902a", hair: "#3a7a3a", metal: "#ffd8a0", wood: "#6a4a32" } },
-};
-const FARM_START = 4, FARM_MAX = 9;
-const plotCost = n => Math.round(400 * Math.pow(3, n - FARM_START));

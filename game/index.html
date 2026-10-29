@@ -107,7 +107,7 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
 
 /* panel + tabs */
 .panel { flex: 1; overflow-y: auto; padding: 10px 10px 16px; -webkit-overflow-scrolling: touch; }
-.tabs { display: grid; grid-template-columns: repeat(5, 1fr); background: var(--ink); border-top: 2px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--ink); border-top: 2px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
 .tabs button { position: relative; border: 2px solid transparent; background: transparent; border-radius: 6px; padding: 6px 2px; font-size: .82rem; font-weight: 700; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .tabs button i { font-style: normal; font-family: var(--pix); font-size: 1rem; line-height: 1; }
 .tabs button.dot::after { content: ""; position: absolute; top: 4px; right: 12px; width: 8px; height: 8px; background: var(--neon); border: 2px solid var(--ink); border-radius: 50%; }
@@ -148,24 +148,16 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
 .price { font-family: var(--pix); font-size: .8rem; white-space: nowrap; }
 .btnrow:disabled { opacity: .45; }
 
-/* farm: grass card with soil tiles */
-.farm { background: #1e3a26; border: 2px solid #2e5a36; border-radius: 10px; padding: 10px; margin-bottom: 8px; box-shadow: inset 0 0 0 2px #16301e; background-image: radial-gradient(#2a5032 1px, transparent 1px); background-size: 8px 8px; }
-.farm-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-.farm-h small { color: #a8d0a8; font-size: .74rem; }
-.plots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.plot { background: #2a1e16; border: 2px solid #120c08; border-radius: 6px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; gap: 1px; min-height: 104px; position: relative; box-shadow: inset 0 -3px 0 #1a120c; }
-.plot .soil { width: 56px; height: 52px; display: grid; place-items: center; background: repeating-linear-gradient(0deg, #4a3222 0 4px, #553a28 4px 8px); border-radius: 4px; font-size: 1.4rem; color: #c8a880; }
-.plot .soil img { width: 48px; height: 48px; }
-.plot b { font-size: .78rem; }
-.plot small { font-size: .7rem; color: #c8b8a0; text-align: center; line-height: 1.25; }
-.plot.empty { border-style: dashed; border-color: #6a5038; }
-.plot.ripe { border-color: var(--gold); animation: ready 1.2s ease-in-out infinite; }
-.plot.ripe .left { color: var(--gold); font-weight: 700; }
-.plot.buy { border-style: dashed; border-color: #6a5038; background: transparent; }
-.plot.buy:disabled { opacity: .5; }
-.plot .drop { position: absolute; top: 3px; right: 4px; font-size: .8rem; }
-.farm-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.farm-btns .btn { flex: 1; }
+.quest { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: .88rem; }
+.quest:last-child { border-bottom: none; }
+.quest.claimed { opacity: .5; }
+.qbar { display: block; height: 4px; background: #0b0810; margin-top: 4px; border-radius: 2px; overflow: hidden; }
+.qbar i { display: block; height: 100%; background: var(--neon); }
+.qdone { font-size: .76rem; color: var(--muted); }
+/* rarity: SSR cards shimmer gold, SR glow violet */
+.hcard.r-SSRb, .slot.r-SSRb { box-shadow: 0 0 0 1px rgba(255, 203, 82, .35), 0 0 14px rgba(255, 203, 82, .28); background: linear-gradient(160deg, #3a2c18, var(--panel-2) 55%); }
+.hcard.r-SRb, .slot.r-SRb { box-shadow: 0 0 10px rgba(185, 140, 255, .22); background: linear-gradient(160deg, #2c2240, var(--panel-2) 55%); }
+.big-pic.r-SSRb { box-shadow: 0 0 18px rgba(255, 203, 82, .4); }
 
 .rar { font-family: var(--pix); font-size: .66rem; padding: 0 4px; border-radius: 3px; color: var(--ink); vertical-align: 1px; }
 .r-R { background: var(--r); } .r-SR { background: var(--sr); } .r-SSR { background: var(--ssr); }
@@ -263,32 +255,7 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
 .rcard b { font-size: .7rem; line-height: 1.2; position: relative; }
 .single .rcard b { font-size: 1rem; }
 .rcard small { font-size: .62rem; color: var(--neon); position: relative; }
-.rcard .gun { font-size: .66rem; padding: 0 5px; border-radius: 3px; border: 1px solid var(--muted); color: var(--muted); vertical-align: 1px; white-space: nowrap; }
-.tip { background: #1c2e26; border: 2px solid var(--neon); border-radius: 8px; padding: 8px 10px; font-size: .84rem; margin-bottom: 10px; }
-.tip b { color: var(--neon); }
-.price { font-family: var(--pix); font-size: .8rem; white-space: nowrap; }
-.btnrow:disabled { opacity: .45; }
-
-/* farm: grass card with soil tiles */
-.farm { background: #1e3a26; border: 2px solid #2e5a36; border-radius: 10px; padding: 10px; margin-bottom: 8px; box-shadow: inset 0 0 0 2px #16301e; background-image: radial-gradient(#2a5032 1px, transparent 1px); background-size: 8px 8px; }
-.farm-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-.farm-h small { color: #a8d0a8; font-size: .74rem; }
-.plots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.plot { background: #2a1e16; border: 2px solid #120c08; border-radius: 6px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; gap: 1px; min-height: 104px; position: relative; box-shadow: inset 0 -3px 0 #1a120c; }
-.plot .soil { width: 56px; height: 52px; display: grid; place-items: center; background: repeating-linear-gradient(0deg, #4a3222 0 4px, #553a28 4px 8px); border-radius: 4px; font-size: 1.4rem; color: #c8a880; }
-.plot .soil img { width: 48px; height: 48px; }
-.plot b { font-size: .78rem; }
-.plot small { font-size: .7rem; color: #c8b8a0; text-align: center; line-height: 1.25; }
-.plot.empty { border-style: dashed; border-color: #6a5038; }
-.plot.ripe { border-color: var(--gold); animation: ready 1.2s ease-in-out infinite; }
-.plot.ripe .left { color: var(--gold); font-weight: 700; }
-.plot.buy { border-style: dashed; border-color: #6a5038; background: transparent; }
-.plot.buy:disabled { opacity: .5; }
-.plot .drop { position: absolute; top: 3px; right: 4px; font-size: .8rem; }
-.farm-btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.farm-btns .btn { flex: 1; }
-
-.rar { position: relative; }
+.rcard .rar { position: relative; }
 .rcard .new { font-family: var(--pix); font-size: .56rem; color: var(--ink); background: var(--neon); padding: 0 3px; border-radius: 2px; position: relative; }
 .rcard.r-SSRb { box-shadow: 0 0 16px rgba(255, 203, 82, .5); }
 .rays { position: absolute; inset: -50%; background: repeating-conic-gradient(rgba(255, 203, 82, .25) 0 10deg, transparent 10deg 20deg); animation: spin 6s linear infinite; }
@@ -332,7 +299,6 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
     <button data-tab="adv" class="on"><i>»</i>ผจญภัย</button>
     <button data-tab="team"><i>♟</i>ทีม</button>
     <button data-tab="gear"><i>⚔</i>อุปกรณ์</button>
-    <button data-tab="farm"><i>✿</i>ฟาร์ม</button>
     <button data-tab="gacha"><i>☕</i>ชงเรียก</button>
   </nav>
 </div>
