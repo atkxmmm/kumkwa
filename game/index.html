@@ -69,11 +69,7 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
 .hud { position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; }
 .hudbtn { font-family: var(--pix); font-size: .72rem; min-width: 54px; height: 30px; padding: 0 8px; border-radius: 5px; border: 2px solid var(--cream); background: rgba(15, 11, 20, .7); color: var(--cream); }
 .hudbtn.on { background: var(--cream); color: var(--ink); }
-.waves { position: absolute; top: 12px; right: 10px; display: flex; gap: 4px; }
-.waves i { width: 9px; height: 9px; border: 2px solid var(--cream); background: rgba(15, 11, 20, .6); }
-.waves i.done { background: var(--cream); }
-.waves i.now { background: var(--neon); border-color: var(--neon); }
-.waves i.boss { border-color: var(--pink); }
+.waves { position: absolute; top: 10px; right: 10px; font-family: var(--pix); font-size: .72rem; color: var(--cream); background: rgba(15, 11, 20, .7); border: 2px solid var(--cream); border-radius: 5px; padding: 3px 8px; }
 
 /* dialogue box */
 .dialog { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; align-items: flex-end; gap: 0; cursor: pointer; z-index: 5; }
@@ -100,6 +96,10 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
 .bar i { display: block; height: 100%; transition: width .1s linear; }
 .bar.hp i { background: var(--hp); }
 .bar.en i { background: var(--en); }
+.sk { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.bar.en2 i { background: #ffb04a; }
+.bar.locked { opacity: .25; }
+.bar.locked i { width: 0 !important; }
 .pcard.ready { border-color: var(--en); animation: ready 1s ease-in-out infinite; }
 .pcard.ready::after { content: "สกิล!"; position: absolute; top: -9px; right: 4px; font-size: .62rem; font-weight: 700; background: var(--en); color: var(--ink); padding: 0 4px; border-radius: 3px; }
 @keyframes ready { 50% { box-shadow: 0 0 0 2px rgba(122, 216, 255, .35); } }
@@ -225,6 +225,28 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
 .skill { background: var(--panel-2); border-left: 3px solid var(--en); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 2px; }
 .skill small { color: var(--muted); font-size: .8rem; }
 .skill .next { color: var(--neon); }
+.skill b em { font-style: normal; font-weight: 400; font-size: .74rem; color: var(--muted); margin-left: 4px; }
+.skill.passive { border-left-color: var(--gold); }
+.skill.subs { border-left-color: var(--sr); }
+.skill.locked { opacity: .5; }
+.switch.tight { padding: 0 2px 10px; font-size: .84rem; }
+
+/* loot card that pops over the battle */
+.drop { position: absolute; left: 50%; top: 44px; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; background: rgba(18, 12, 22, .95); border: 2px solid var(--line); border-radius: 8px; padding: 8px 12px 8px 8px; min-width: 220px; overflow: hidden; z-index: 6; animation: dropIn .3s ease-out; pointer-events: none; }
+.drop.hidden { display: none; }
+.drop.r-SSRb { box-shadow: 0 0 24px rgba(255, 203, 82, .6); }
+.drop.r-SRb { box-shadow: 0 0 18px rgba(185, 140, 255, .5); }
+.drop-pic { width: 46px; height: 46px; flex: none; display: grid; place-items: center; background: #120d18; border-radius: 6px; position: relative; }
+.drop-pic img { width: 38px; height: 38px; object-fit: contain; }
+.drop-body { display: flex; flex-direction: column; gap: 1px; position: relative; min-width: 0; }
+.drop-body small { font-size: .7rem; color: var(--muted); }
+.drop-body b { font-size: .95rem; }
+.drop-body .rar { align-self: flex-start; }
+@keyframes dropIn { from { transform: translate(-50%, -12px) scale(.8); opacity: 0; } }
+.enhance-fx { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); font-weight: 700; font-size: 1.6rem; z-index: 40; pointer-events: none; animation: pop .35s ease-out; text-shadow: 0 2px 0 #000; }
+.enhance-fx.hidden { display: none; }
+.enhance-fx.ok { color: var(--gold); }
+.enhance-fx.fail { color: var(--muted); }
 .eqs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
 .eq { border: 2px solid var(--line); background: var(--panel-2); border-radius: 6px; padding: 6px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 86px; justify-content: center; }
 .eq img { width: 36px; height: 36px; object-fit: contain; }
@@ -285,6 +307,8 @@ code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon
       <button class="hudbtn" id="speedBtn" data-act="speed">×1</button>
     </div>
     <div class="waves" id="waveDots"></div>
+    <div class="drop hidden" id="drop"></div>
+    <div class="enhance-fx hidden" id="enhanceFx"></div>
     <div class="dialog hidden" id="dialog">
       <div class="dlg-portrait"></div>
       <div class="dlg-box"><div class="dlg-name"></div><div class="dlg-text"></div><span class="dlg-next">▶</span></div>

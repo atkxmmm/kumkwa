@@ -2,10 +2,8 @@
 // Sim runs in fixed logical pixels (LW x LH); the canvas is scaled by a whole number so pixels stay crisp.
 "use strict";
 const $ = s => document.querySelector(s);
-const LW = 160, LH = 150, GROUND = 118;
+const LW = 160, LH = 150;
 const SAVE_KEY = "nightguild-save-v1";
-const HERO_X = [64, 44, 24], HERO_DY = [0, 6, -5];
-const FOE_X = [102, 122, 142], FOE_DY = [0, 6, -5];
 const OFFLINE_CAP = 8 * 3600;
 
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -47,9 +45,9 @@ function loadAllArt() {
 
 // ---------- Sprite cache ----------
 const SPR = {};
-function build(g, pal, flipToo) {
+function build(g, pal) {
   const s = { w: g.w, h: g.h, img: Pix.toCanvas(g, pal), white: Pix.toCanvas(g, pal, 1, false, true) };
-  if (flipToo) { s.flip = Pix.toCanvas(g, pal, 1, true); s.whiteFlip = Pix.toCanvas(g, pal, 1, true, true); }
+  s.flip = Pix.toCanvas(g, pal, 1, true); s.whiteFlip = Pix.toCanvas(g, pal, 1, true, true);
   s.url = Pix.toCanvas(g, pal, 4).toDataURL();
   return s;
 }
@@ -63,8 +61,8 @@ function sprite(key) {
   else if (kind === "gear") { const d = GEAR[id], c = GEAR_COLORS[d.rarity]; s = build(Pix.icon(d.icon), Pix.palette({ outfit: c.o, accent: c.a, wood: c.w, metal: c.metal })); }
   else {
     const d = kind === "boss" ? BOSSES[id] : MONSTERS[id];
-    if (d.humanoid) s = build(Pix.humanoid(d.humanoid), Pix.palette(d.humanoid), true);
-    else s = build(Pix.monster({ kind: d.kind, extras: kind === "boss" ? ["crown"] : [] }), Pix.palette(d.look), true);
+    if (d.humanoid) s = build(Pix.humanoid(d.humanoid), Pix.palette(d.humanoid));
+    else s = build(Pix.monster({ kind: d.kind, extras: kind === "boss" ? ["crown"] : [] }), Pix.palette(d.look));
   }
   return (SPR[key] = s);
 }
@@ -89,7 +87,7 @@ function freshState() {
     heroes, team: [...STARTER_TEAM], gear: [], uid: 1,
     pity: { hero: 0, gear: 0 }, free: { hero: "", gear: "" },
     daily: null,
-    last: Date.now(), introDone: false, tapTip: false, seen: {}, kills: 0, pulls: 0,
+    last: Date.now(), introDone: false, tapTip: false, seen: {}, autoSalvageR: false, kills: 0, pulls: 0,
   };
 }
 function load() {
@@ -102,6 +100,12 @@ function load() {
 }
 function migrate() {
   S.seen = S.seen || {};
+  // gear used to level 1-30 with gold; it now enhances +0 to +10 and carries rolled extra stats
+  S.gear.forEach(g => {
+    if (g.plus === undefined) g.plus = Math.min(PLUS_MAX, Math.floor(((g.lv || 1) - 1) / 2));
+    if (!g.subs) g.subs = rollSubs(GEAR[g.id].rarity);
+    delete g.lv;
+  });
   Object.entries(RENAMED).forEach(([from, to]) => {
     if (S.heroes[from]) { S.heroes[to] = S.heroes[from]; delete S.heroes[from]; }
     S.team = S.team.map(id => id === from ? to : id);
@@ -116,23 +120,34 @@ function save() {
 // ---------- Stats ----------
 const heroLvCost = lv => Math.round(15 * Math.pow(1.14, lv - 1));
 const gearRm = r => ({ R: 1, SR: 1.6, SSR: 2.4 })[r];
-const gearLvCost = g => Math.round(30 * gearRm(GEAR[g.id].rarity) * Math.pow(1.16, g.lv - 1));
-const gearSalvage = g => Math.round(20 * gearRm(GEAR[g.id].rarity) * g.lv);
+const plusCost = g => Math.round(killGold(S.best) * 20 * gearRm(GEAR[g.id].rarity) * Math.pow(1.5, g.plus));
+const gearSalvage = g => Math.round(killGold(S.best) * 5 * gearRm(GEAR[g.id].rarity) * (1 + g.plus));
 const DUPE_BEANS = { R: 15, SR: 50, SSR: 200 };
 
+function rollSubs(rarity) {
+  const pool = [...SUB_POOL], subs = [];
+  for (let i = 0; i < SUB_COUNT[rarity]; i++) {
+    const s = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+    subs.push({ k: s.k, v: +(rand(s.min, s.max) * gearRm(rarity)).toFixed(s.k === "crit" ? 3 : 1) });
+  }
+  return subs;
+}
+function newGear(id) { return { uid: S.uid++, id, plus: 0, subs: rollSubs(GEAR[id].rarity), by: null }; }
 function gearStats(g) {
-  const d = GEAR[g.id], f = 1 + .15 * (g.lv - 1), fs = 1 + .04 * (g.lv - 1);
-  const o = {};
+  const d = GEAR[g.id], f = 1 + .12 * g.plus, o = {};
   ["atk", "hp", "def"].forEach(k => { if (d[k]) o[k] = d[k] * f; });
-  if (d.crit) o.crit = d.crit * fs;
-  if (d.spd) o.spd = d.spd * fs;
+  if (d.crit) o.crit = d.crit * (1 + .04 * g.plus);
+  if (d.spd) o.spd = d.spd * (1 + .04 * g.plus);
+  (g.subs || []).forEach(s => { o[s.k] = (o[s.k] || 0) + s.v; });
   return o;
 }
+function passiveOf(id) { return S.heroes[id] && S.heroes[id].lv >= PASSIVE_LV ? HEROES[id].passive : null; }
+const teamAura = () => S.team.reduce((a, id) => { const p = id && passiveOf(id); return a + (p && p.kind === "aura" ? p.spd : 0); }, 0);
 function heroStats(id) {
   const d = HEROES[id], o = S.heroes[id], r = ROLE[d.role];
   const m = RARITY[d.rarity].mult * Math.pow(1.1, o.lv - 1) * (1 + .22 * (o.star - 1));
   const pct = { atk: 0, hp: 0, def: 0 };
-  let crit = r.crit, spd = r.spd;
+  let crit = r.crit, spd = r.spd + (S.team.includes(id) ? teamAura() : 0);
   S.gear.forEach(g => {
     if (g.by !== id) return;
     const gs = gearStats(g);
@@ -147,84 +162,163 @@ function heroStats(id) {
 const power = st => Math.round(st.atk * 4 * (1 + st.crit * .6) * st.spd / 100 + st.hp * .5 + st.def * 2);
 const heroPower = id => power(heroStats(id));
 const teamPower = () => S.team.reduce((a, id) => a + (id ? heroPower(id) : 0), 0);
+const skillUnlocked = (id, i) => i === 0 || S.heroes[id].lv >= SKILL2_LV;
 
 function stageScale(n) { return Math.pow(1.115, n - 1); }
 function worldOf(n) { return Math.floor((n - 1) / STAGES_PER_WORLD) % WORLDS.length; }
 function stageName(n) { return `${Math.floor((n - 1) / STAGES_PER_WORLD) + 1}-${(n - 1) % STAGES_PER_WORLD + 1}`; }
 const killGold = n => 3 * Math.pow(1.13, n - 1);
+const stageQuota = n => 12 + Math.min(10, Math.floor(n / 3));
 
 // ---------- Battle ----------
-// Side view: the party stands on the left, monsters on the right. Tap a monster to focus the whole team on it;
-// tap a charging boss to break its big attack.
-const B = { heroes: [], foes: [], proj: [], fx: [], nums: [], later: [], wave: 1, state: "fight", timer: 0, cutin: null, banner: null, shake: 0, t: 0, paused: false, focus: null };
+// Top-down map. The party walks the map on its own, monster packs wait around it, and the boss turns up once
+// enough monsters are down. Tap a monster to focus it, tap the ground to walk the team there (that is also how
+// you step out of a boss's red circle), tap a charging boss to break its attack.
+const B = {
+  heroes: [], foes: [], proj: [], fx: [], nums: [], later: [], zones: [],
+  state: "fight", timer: 0, cutin: null, banner: null, shake: 0, t: 0, paused: false,
+  focus: null, moveTo: null, kills: 0, quota: 12, boss: null, map: null, cam: { x: 0, y: 0 },
+};
+const MELEE_RANGE = 12, RANGED_RANGE = 56, AGGRO = 58;
+const FORM = [[0, 0], [-14, 10], [14, 10]];
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 function makeHeroUnit(id, slot) {
   const st = heroStats(id), d = HEROES[id];
   return {
     side: "hero", id, slot, name: d.name, sprite: "hero:" + id, art: "hero:" + id, scale: 1,
     maxHp: st.hp, hp: st.hp, atk: st.atk, def: st.def, spd: st.spd, crit: st.crit,
-    ranged: ROLE[d.role].ranged, color: d.color,
-    energy: 0, cd: .4 + slot * .25, x: HERO_X[slot], y: GROUND + HERO_DY[slot],
-    lunge: 0, flash: 0, dead: false, dying: 0, shield: 0, buffs: [], taunt: 0, slow: 0, burn: null,
+    ranged: ROLE[d.role].ranged, color: d.color, face: 1, moving: 0,
+    cd: .4 + slot * .25, skillCd: [3 + slot, 8 + slot], swings: 0,
+    x: 0, y: 0, lunge: 0, flash: 0, dead: false, dying: 0, shield: 0, buffs: [], taunt: 0, clone: null,
   };
 }
-function makeFoe(key, slot, n, boss) {
+function makeFoe(key, n, boss, x, y) {
   const d = boss ? BOSSES[key] : MONSTERS[key], sc = stageScale(n);
   const trait = boss ? null : d.trait || null;
-  const hp = 55 * sc * (boss ? 9 : d.hp);
+  const hp = 55 * sc * (boss ? 10 : d.hp);
   const f = {
-    side: "foe", key, slot, name: d.name, sprite: (boss ? "boss:" : "mob:") + key, art: (boss ? "boss:" : "mob:") + key,
-    scale: boss ? 2 : 1, boss, trait,
-    maxHp: hp, hp, atk: 8.5 * sc * (boss ? 1.5 : d.atk), def: 5 * sc,
-    spd: boss ? 80 : trait === "fast" ? 170 : 88, crit: .05, color: "#ff6a6a",
-    cd: .9 + slot * .3 + Math.random() * .4, x: boss ? 124 : FOE_X[slot], y: GROUND + (boss ? 2 : FOE_DY[slot]),
-    lunge: 0, flash: 0, dead: false, dying: 0, shield: 0, buffs: [], taunt: 0, slow: 0, burn: null,
+    side: "foe", key, name: d.name, sprite: (boss ? "boss:" : "mob:") + key, art: (boss ? "boss:" : "mob:") + key,
+    scale: boss ? 2 : 1, boss, trait, slot: Math.floor(Math.random() * 3),
+    maxHp: hp, hp, atk: 8 * sc * (boss ? 1.5 : d.atk), def: 5 * sc,
+    spd: boss ? 80 : trait === "fast" ? 170 : 88, crit: .05, ranged: key === "imp", face: -1,
+    cd: rand(.5, 1.2), x, y, homeX: x, homeY: y, wander: null, aggro: false, pack: null,
+    lunge: 0, flash: 0, dead: false, dying: 0, shield: 0, burn: null, chill: 0, frozen: 0, stun: 0, mark: 0,
     gold: killGold(n) * (boss ? 8 : 1),
   };
-  f.homeX = f.x;
   if (trait === "shield") f.shield = f.shieldMax = hp * .6;
   if (trait === "healer") f.healCd = 3;
-  if (boss) Object.assign(f, { move: d.move, chargeCd: 5, charge: null, stun: 0, summoned: 0, enraged: false });
+  if (boss) Object.assign(f, { move: d.move, chargeCd: 6, charge: null, summoned: 0, enraged: false, aggro: true });
   return f;
 }
-const lift = u => u.trait === "flyer" ? 14 + Math.round(Math.sin(B.t * 3 + u.slot) * 2) : 0;
+const lift = u => u.trait === "flyer" ? 10 + Math.round(Math.sin(B.t * 3 + u.homeX) * 2) : 0;
 function unitBox(u) {
-  const s = sprite(u.sprite), w = (ART[u.art] ? 28 : s.w) * u.scale, h = (ART[u.art] ? 28 : s.h) * u.scale;
+  const s = sprite(u.sprite), w = (ART[u.art] ? 26 : s.w) * u.scale, h = (ART[u.art] ? 26 : s.h) * u.scale;
   return { x: u.x - w / 2, y: u.y - h - lift(u), w, h };
 }
 
+// ---- Map: one generated area per stage, drawn once into an offscreen canvas ----
+const MAP_W = 480, MAP_H = 480, EDGE = 28;
+function buildMap(theme, seed) {
+  const c = document.createElement("canvas"); c.width = MAP_W; c.height = MAP_H;
+  const x = c.getContext("2d");
+  let s = seed % 233280 || 7;
+  const rnd = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+  const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(Math.round(a), Math.round(b), w, h); };
+  const P = {
+    alley:  { g: ["#34343e", "#3a3a44", "#30303a"], path: "#4a2c2a", edge: "#1a1216", edge2: "#43282a" },
+    forest: { g: ["#1e3a26", "#22422a", "#1a3422"], path: "#4a3a2a", edge: "#0e1e16", edge2: "#16302a" },
+    cave:   { g: ["#2a1e3a", "#2e2240", "#261a34"], path: "#3a2e4a", edge: "#120c1c", edge2: "#22183a" },
+    tower:  { g: ["#2a2450", "#26204a", "#2e2858"], path: "#4a3a70", edge: "#120e2a", edge2: "#1e1840" },
+  }[theme];
+  for (let ty = 0; ty < MAP_H; ty += 8) for (let tx = 0; tx < MAP_W; tx += 8) {
+    R(tx, ty, 8, 8, theme === "tower" ? P.g[((tx + ty) / 8) % 2] : P.g[Math.floor(rnd() * 3)]);
+    if (theme === "alley" && rnd() < .5) R(tx + 1, ty + 1, 6, 1, "#2a2a32");
+  }
+  // a winding path from the start at the bottom toward the top
+  let px = MAP_W / 2;
+  for (let py = MAP_H; py > 0; py -= 4) { px += rand(-3, 3); px = Math.max(80, Math.min(MAP_W - 80, px)); R(px - 10, py, 20, 4, P.path); if (rnd() < .2) R(px - 8 + rnd() * 16, py, 2, 2, P.g[0]); }
+  // scattered decoration
+  for (let i = 0; i < 90; i++) {
+    const a = EDGE + rnd() * (MAP_W - EDGE * 2), b = EDGE + rnd() * (MAP_H - EDGE * 2), k = rnd();
+    if (theme === "forest") {
+      if (k < .5) { R(a, b, 1, 2, "#4a8a5a"); R(a + 2, b + 1, 1, 2, "#3a7a4a"); }
+      else if (k < .7) { R(a, b, 3, 2, ["#ff7ab0", "#ffd84a", "#c9a8ff"][i % 3]); R(a + 1, b + 2, 1, 1, "#3a7a4a"); }
+      else if (k < .85) { R(a - 4, b - 3, 9, 6, "#1a4a2a"); R(a - 3, b - 4, 7, 2, "#2a5a36"); }
+      else { R(a, b, 4, 2, "#b04a5a"); R(a + 1, b + 2, 2, 2, "#e8dcc8"); }
+    } else if (theme === "cave") {
+      if (k < .4) { R(a, b, 2, 5, "#7a4ad0"); R(a, b, 1, 5, "#b98cff"); R(a + 3, b + 2, 2, 3, "#9af0ff"); }
+      else if (k < .8) R(a, b, 5, 3, "#3a2e4a");
+      else R(a, b, 2, 2, "#c9a8ff");
+    } else if (theme === "alley") {
+      if (k < .25) { R(a, b, 8, 7, "#5a3a22"); R(a, b, 8, 1, "#7a5a32"); R(a + 3, b, 1, 7, "#4a2e1a"); }
+      else if (k < .45) { R(a - 4, b, 10, 3, "#1c3a2a"); R(a - 3, b + 1, 8, 1, "#7affb0"); }
+      else if (k < .6) { R(a, b - 8, 1, 9, "#1a1216"); R(a - 2, b - 10, 5, 3, "#f2d16b"); R(a - 6, b - 1, 13, 3, "rgba(242,209,107,.12)"); }
+      else R(a, b, 3, 1, "#2a2a32");
+    } else {
+      if (k < .3) { R(a, b, 5, 5, "#3a3470"); R(a + 2, b + 1, 1, 3, "#ffd76a"); R(a + 1, b + 2, 3, 1, "#ffd76a"); }
+      else if (k < .5) { R(a - 3, b - 10, 7, 12, "#1e1840"); R(a - 2, b - 10, 5, 2, "#3a3470"); }
+      else R(a, b, 1, 1, "#8a8ac8");
+    }
+  }
+  // dense border so the area reads as a clearing
+  for (let i = 0; i < 260; i++) {
+    const side = i % 4, t = rnd() * MAP_W, d = rnd() * EDGE;
+    const a = side === 0 ? t : side === 1 ? t : side === 2 ? d : MAP_W - d, b = side === 0 ? d : side === 1 ? MAP_H - d : t;
+    if (theme === "forest") { R(a - 8, b - 8, 16, 14, P.edge2); R(a - 6, b - 10, 12, 4, "#1c3a30"); R(a - 1, b + 4, 3, 5, "#2a1e16"); }
+    else if (theme === "cave") { R(a - 8, b - 6, 16, 14, P.edge2); R(a - 6, b - 7, 12, 2, "#3a2e4a"); }
+    else if (theme === "alley") { R(a - 8, b - 6, 16, 12, P.edge2); R(a - 8, b - 6, 16, 1, "#512f2c"); }
+    else { R(a - 6, b - 12, 12, 16, P.edge2); R(a - 5, b - 12, 10, 2, "#3a3470"); }
+  }
+  R(0, 0, MAP_W, 6, P.edge); R(0, MAP_H - 6, MAP_W, 6, P.edge); R(0, 0, 6, MAP_H, P.edge); R(MAP_W - 6, 0, 6, MAP_H, P.edge);
+  return c;
+}
+
 function startStage(msg) {
+  const theme = WORLDS[worldOf(S.stage)].theme;
+  B.map = { theme, canvas: ART["bg:" + theme] ? null : buildMap(theme, S.stage * 7919) };
+  const sx = MAP_W / 2, sy = MAP_H - 60;
   B.heroes = S.team.map((id, i) => id ? makeHeroUnit(id, i) : null).filter(Boolean);
-  B.foes = []; B.proj = []; B.later = []; B.focus = null;
-  B.wave = 1;
-  B.state = "between"; B.timer = .6;
+  B.heroes.forEach((h, i) => { h.x = sx + FORM[i][0]; h.y = sy + FORM[i][1]; });
+  B.foes = []; B.proj = []; B.later = []; B.zones = []; B.focus = null; B.moveTo = null; B.boss = null;
+  B.kills = 0; B.quota = stageQuota(S.stage);
+  spawnPacks(sx, sy);
+  B.cam.x = sx - LW / 2; B.cam.y = sy - LH / 2 - 20;
+  B.state = "fight";
   B.banner = { text: msg || `ด่าน ${stageName(S.stage)}`, sub: WORLDS[worldOf(S.stage)].name, t: 1.6 };
   renderParty(true); renderStageInfo();
 }
-function spawnWave() {
+function spawnPacks(sx, sy) {
   const w = WORLDS[worldOf(S.stage)];
-  B.foes = []; B.focus = null;
-  if (B.wave === WAVES_PER_STAGE) {
-    const bi = worldOf(S.stage);
-    B.foes.push(makeFoe(bi, 0, S.stage, true));
-    B.banner = { text: "บอส!", sub: BOSSES[bi].name, t: 1.4, boss: true };
-  } else {
-    const count = S.stage < 3 && B.wave < 3 ? 2 : 3;
-    for (let i = 0; i < count; i++) B.foes.push(makeFoe(pick(w.mobs), i, S.stage, false));
+  const packs = Math.ceil(B.quota / 3) + 2;
+  for (let p = 0; p < packs; p++) {
+    let px, py, tries = 0;
+    do { px = rand(EDGE + 30, MAP_W - EDGE - 30); py = rand(EDGE + 30, MAP_H - EDGE - 30); } while (Math.hypot(px - sx, py - sy) < 110 && tries++ < 30);
+    const pack = [];
+    const size = S.stage < 3 ? 2 : 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < size; i++) {
+      const f = makeFoe(pick(w.mobs), S.stage, false, px + rand(-14, 14), py + rand(-10, 10));
+      f.pack = pack; pack.push(f); B.foes.push(f);
+    }
   }
-  B.foes.forEach(f => { if (f.trait && !S.seen[f.trait]) { S.seen[f.trait] = true; toast(TRAITS[f.trait].tip, 4200); } });
-  B.state = "fight";
-  renderStageInfo();
+}
+function spawnBoss() {
+  const bi = worldOf(S.stage), lead = leader();
+  let bx = MAP_W / 2, by = EDGE + 70;
+  if (lead) { const a = Math.atan2(MAP_H / 2 - lead.y, MAP_W / 2 - lead.x); bx = Math.max(EDGE + 40, Math.min(MAP_W - EDGE - 40, lead.x + Math.cos(a) * 120)); by = Math.max(EDGE + 50, Math.min(MAP_H - EDGE - 30, lead.y + Math.sin(a) * 120)); }
+  B.boss = makeFoe(bi, S.stage, true, bx, by);
+  B.foes.push(B.boss);
+  B.banner = { text: "บอสปรากฏตัว!", sub: BOSSES[bi].name, t: 1.8, boss: true };
+  burst(bx, by - 20, "#ff5a7a", 30, 2);
 }
 function summon(boss) {
   const w = WORLDS[worldOf(S.stage)];
-  [1, 2].forEach(slot => {
-    if (B.foes.some(f => !f.dead && f.slot === slot && !f.boss)) return;
-    const f = makeFoe(pick(w.mobs), slot, S.stage, false);
-    f.x = f.homeX = slot === 1 ? 96 : 146; f.gold *= .5;
+  for (let i = 0; i < 2; i++) {
+    const f = makeFoe(pick(w.mobs), S.stage, false, boss.x + rand(-30, 30), boss.y + rand(-20, 20));
+    f.aggro = true; f.gold *= .5; f.summoned = true;
     B.foes.push(f);
     burst(f.x, f.y - 8, "#c9a8ff", 10, 1.2);
-  });
+  }
   addNum(boss.x, unitBox(boss).y - 6, "เรียกลูกน้อง!", "#c9a8ff", true);
 }
 // Re-read stats after an upgrade without healing the team back to full.
@@ -239,31 +333,29 @@ function refreshParty() {
 }
 
 const alive = list => list.filter(u => !u.dead);
-const atkOf = u => u.atk * (1 + u.buffs.reduce((a, b) => a + b.atk, 0));
+const atkOf = u => u.atk * (1 + (u.buffs || []).reduce((a, b) => a + (b.atk || 0), 0));
+const spdOf = u => u.spd + (u.buffs || []).reduce((a, b) => a + (b.spd || 0), 0);
+const leader = () => B.heroes.find(h => !h.dead);
+const nearest = (from, list, max = Infinity) => list.reduce((best, u) => { const d = dist(from, u); return d < max && (!best || d < dist(from, best)) ? u : best; }, null);
+function foesNear(p, r) { return alive(B.foes).filter(f => dist(p, f) <= r); }
 
-function chooseTarget(u, mode) {
-  if (u.side === "hero") {
-    const f = alive(B.foes);
-    if (!f.length) return null;
-    if (mode === "lowest") return f.reduce((a, b) => b.hp / b.maxHp < a.hp / a.maxHp ? b : a);
-    if (mode === "random") return pick(f);
-    if (B.focus && !B.focus.dead) return B.focus;
-    // on AUTO the team panics about a bomber that is nearly on top of them
-    const close = S.auto && f.find(x => x.trait === "bomber" && x.x < 92);
-    return close || f.reduce((a, b) => b.x < a.x ? b : a);
-  }
+function heroTarget(h) {
+  if (B.focus && !B.focus.dead) return B.focus;
+  const f = alive(B.foes);
+  const bomber = S.auto && f.find(x => x.trait === "bomber" && x.aggro && dist(x, h) < 40);
+  if (bomber) return bomber;
+  const lead = leader();
+  const near = nearest(h, f.filter(x => x.aggro || dist(x, lead) < 90));
+  if (near) return near;
+  return h === lead ? nearest(h, f) : null; // the leader goes looking, the rest follow
+}
+function foeTarget(f) {
   const h = alive(B.heroes);
-  if (!h.length) return null;
-  const t = h.find(x => x.taunt > 0);
-  if (t) return t;
-  const weights = h.map(x => x.slot === 0 ? 3 : 2);
-  let r = Math.random() * weights.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < h.length; i++) { r -= weights[i]; if (r <= 0) return h[i]; }
-  return h[0];
+  return h.find(x => x.taunt > 0 && dist(x, f) < 120) || nearest(f, h);
 }
 function foeAt(x, y) {
   let best = null;
-  alive(B.foes).forEach(f => { const b = unitBox(f); if (x >= b.x - 4 && x <= b.x + b.w + 4 && y >= b.y - 4 && y <= b.y + b.h + 4 && (!best || b.w < unitBox(best).w)) best = f; });
+  alive(B.foes).forEach(f => { const b = unitBox(f); if (x >= b.x - 5 && x <= b.x + b.w + 5 && y >= b.y - 5 && y <= b.y + b.h + 5 && (!best || b.w < unitBox(best).w)) best = f; });
   return best;
 }
 
@@ -271,171 +363,355 @@ function addNum(x, y, text, color, big) { B.nums.push({ x: x + rand(-3, 3), y, t
 function burst(x, y, color, n = 6, spread = 1) {
   for (let i = 0; i < n; i++) B.fx.push({ x, y, vx: rand(-30, 30) * spread, vy: rand(-45, -10) * spread, t: 0, life: rand(.3, .55), color, size: Math.random() < .3 ? 2 : 1 });
 }
+function ring(x, y, r, color, life = .4) { B.zones.push({ x, y, r, color, t: 0, life, ring: true }); }
+function combo(f, text) { addNum(f.x, unitBox(f).y - 14, text, "#ff9af0", true); B.shake = Math.max(B.shake, .15); }
 
+// ---- Damage ----
 function damage(att, tgt, mult, opts = {}) {
   if (!tgt || tgt.dead) return 0;
   const b = unitBox(tgt);
   if (tgt.trait === "flyer" && !att.ranged && !opts.skill && Math.random() < .5) { addNum(tgt.x, b.y - 2, "MISS", "#a898b0"); return 0; }
   const a = atkOf(att);
   let dmg = a * mult * a / (a + tgt.def);
-  const crit = opts.crit || Math.random() < att.crit;
+  const pa = att.side === "hero" ? passiveOf(att.id) : null;
+  let crit = opts.crit || Math.random() < att.crit;
+  if (pa && pa.kind === "everyN" && opts.basic && att.swings % pa.n === 0) crit = true;
   if (crit) dmg *= 1.6;
-  if (tgt.stun > 0) dmg *= 1.5;
+  if (tgt.stun > 0 || tgt.frozen > 0) dmg *= 1.5;
+  if (tgt.mark > 0) dmg *= 1.3 + (pa && pa.kind === "markbonus" ? pa.pct : 0);
+  if (opts.el === "fire" && (tgt.chill > 0 || tgt.frozen > 0)) { dmg *= 2; tgt.chill = 0; tgt.frozen = 0; combo(tgt, "ละลาย! ×2"); }
   dmg = Math.max(1, Math.round(dmg * rand(.92, 1.08)));
-  let taken = dmg;
   if (tgt.charge) tgt.charge.gauge += dmg * (opts.skill ? 2 : 1);
   if (tgt.trait === "shield" && tgt.shield > 0) {
-    const hit = Math.min(tgt.shield, taken * (opts.skill ? 2 : 1));
-    tgt.shield -= hit; taken = 0;
+    const hit = Math.min(tgt.shield, dmg * (opts.skill ? 2 : 1));
+    tgt.shield -= hit;
     addNum(tgt.x, b.y - 2, fmt(hit), "#9fdcff", crit);
-    burst(tgt.x - 6, b.y + b.h / 2, "#9fdcff", 4);
+    burst(tgt.x, b.y + b.h / 2, "#9fdcff", 4);
     if (tgt.shield <= 0) { addNum(tgt.x, b.y - 10, "โล่แตก!", "#9fdcff", true); burst(tgt.x, b.y + b.h / 2, "#9fdcff", 14, 1.4); }
+    aggroFoe(tgt);
     return hit;
   }
+  let taken = dmg;
   if (tgt.shield > 0) { const s = Math.min(tgt.shield, taken); tgt.shield -= s; taken -= s; }
   tgt.hp -= taken;
   tgt.flash = .1;
-  addNum(tgt.x, b.y - 2, fmt(dmg) + (crit ? "!" : ""), crit ? "#ffd84a" : tgt.side === "hero" ? "#ff8a8a" : "#ffffff", crit);
-  burst(tgt.x, b.y + b.h / 2, crit ? "#ffd84a" : "#fff2d8", crit ? 8 : 4);
-  if (tgt.side === "hero") tgt.energy = Math.min(100, tgt.energy + 5);
-  if (crit) B.shake = .12;
-  if (opts.lifesteal) heal(att, dmg * opts.lifesteal);
+  addNum(tgt.x, b.y - 2, fmt(dmg) + (crit ? "!" : ""), crit ? "#ffd84a" : tgt.side === "hero" ? "#ff8a8a" : "#ffffff", crit || opts.big);
+  burst(tgt.x, b.y + b.h / 2, crit ? "#ffd84a" : "#fff2d8", crit ? 8 : 3);
+  if (crit && mult > 1) B.shake = Math.max(B.shake, .1);
+  if (att.side === "hero") {
+    const ls = (opts.lifesteal || 0) + (pa && pa.kind === "lifesteal" ? pa.pct : 0);
+    if (ls) healHero(att, dmg * ls, true);
+    if (pa && pa.kind === "onhit" && opts.basic && Math.random() < pa.chance) applyEffect(att, tgt, pa.effect, pa);
+    if (opts.el) applyEffect(att, tgt, opts.el, opts);
+    if (opts.mark) tgt.mark = 6;
+    aggroFoe(tgt);
+  } else {
+    const tp = passiveOf(tgt.id);
+    if (tp && tp.kind === "thorns" && !att.dead) { const r = Math.round(dmg * tp.pct); att.hp -= r; addNum(att.x, unitBox(att).y, fmt(r), "#d6b25a"); if (att.hp <= 0) kill(att); }
+  }
   if (tgt.hp <= 0) kill(tgt);
   return dmg;
 }
-function heal(u, amt) {
+function applyEffect(att, f, el, opts = {}) {
+  if (f.dead) return;
+  if (el === "mark") { f.mark = 6; return; }
+  if (el === "ice") {
+    if (f.burn) {
+      f.burn = null;
+      combo(f, "ไอน้ำระเบิด!");
+      ring(f.x, f.y - 4, 20, "#e8f4ff", .45); burst(f.x, f.y - 8, "#e8f4ff", 18, 1.6);
+      foesNear(f, 20).forEach(o => damage(att, o, 1.5, { skill: true }));
+    }
+    f.chill = 4;
+    if (opts.freeze) f.frozen = opts.freeze;
+  }
+  if (el === "fire") {
+    const p = passiveOf(att.id);
+    f.burn = { dps: atkOf(att) * .35 * (1 + (p && p.burnPlus || 0)), t: 4 };
+  }
+}
+function healHero(u, amt, quiet) {
   if (u.dead) return;
   amt = Math.round(amt);
   u.hp = Math.min(u.maxHp, u.hp + amt);
-  if (amt > 0) addNum(u.x, unitBox(u).y - 2, "+" + fmt(amt), "#8affb8");
+  if (amt > 0 && !quiet) addNum(u.x, unitBox(u).y - 2, "+" + fmt(amt), "#8affb8");
+}
+function hurtHero(h, raw, from) {
+  if (h.dead) return;
+  let taken = Math.max(1, Math.round(raw * raw / (raw + h.def)));
+  if (h.shield > 0) { const s = Math.min(h.shield, taken); h.shield -= s; taken -= s; if (!taken) return; }
+  h.hp -= taken; h.flash = .12;
+  addNum(h.x, unitBox(h).y - 2, fmt(taken), "#ff8a8a");
+  const tp = passiveOf(h.id);
+  if (from && tp && tp.kind === "thorns") { const r = Math.round(taken * tp.pct); from.hp -= r; if (from.hp <= 0) kill(from); }
+  if (h.hp <= 0) kill(h);
+}
+function aggroFoe(f) {
+  if (f.aggro) return;
+  f.aggro = true;
+  (f.pack || []).forEach(o => { o.aggro = true; });
 }
 function kill(u) {
   u.hp = 0; u.dead = true; u.dying = .5;
   if (B.focus === u) B.focus = null;
-  if (u.side === "foe") {
-    S.gold += u.gold; S.kills++; bump("kills");
-    const b = unitBox(u);
-    addNum(u.x, b.y - 4, "+" + fmt(u.gold) + "G", "#ffcb52");
-    burst(u.x, b.y + b.h / 2, "#ffcb52", u.boss ? 20 : 8, u.boss ? 1.6 : 1);
-    // treasure chests: the small, frequent bean drip that keeps the gacha in reach
-    if (Math.random() < (u.boss ? 1 : .05)) {
-      const beans = u.boss ? 40 : Math.round(rand(8, 20));
-      S.beans += beans;
-      B.fx.push({ x: u.x, y: b.y, vx: 0, vy: -12, t: 0, life: 1.2, color: "chest", size: 0 });
-      addNum(u.x, b.y - 14, `หีบ! +${beans} เมล็ด`, "#ffcb52", true);
-    }
-    updateWallet();
-  } else burst(u.x, u.y - 8, "#9a8aa8", 8);
+  if (u.side !== "foe") { burst(u.x, u.y - 8, "#9a8aa8", 8); return; }
+  S.gold += u.gold; S.kills++; bump("kills");
+  const b = unitBox(u);
+  addNum(u.x, b.y - 4, "+" + fmt(u.gold) + "G", "#ffcb52");
+  burst(u.x, b.y + b.h / 2, "#ffcb52", u.boss ? 24 : 8, u.boss ? 1.8 : 1);
+  if (!u.boss) B.kills++;
+  // passives that trigger on any kill
+  let heal = 0;
+  B.heroes.forEach(h => { const p = !h.dead && passiveOf(h.id); if (p && p.kind === "onkill") heal += p.heal; });
+  if (heal) alive(B.heroes).forEach(h => healHero(h, h.maxHp * heal, true));
+  if (Math.random() < (u.boss ? 1 : .05)) {
+    const beans = u.boss ? 40 : Math.round(rand(8, 20));
+    S.beans += beans;
+    B.fx.push({ x: u.x, y: b.y, vx: 0, vy: -12, t: 0, life: 1.2, color: "chest", size: 0 });
+    addNum(u.x, b.y - 14, `หีบ! +${beans} เมล็ด`, "#ffcb52", true);
+  }
+  maybeDrop(u);
+  if (B.kills >= B.quota && !B.boss) spawnBoss();
+  if (u.boss) { B.state = "clear"; B.timer = 1.4; B.banner = { text: "ผ่านด่าน!", sub: "", t: 1.4 }; }
+  updateWallet(); renderStageInfo();
 }
 
-function basicAttack(u) {
-  const tgt = chooseTarget(u, "front");
-  if (!tgt) return;
-  if (u.ranged) {
+// ---- Movement ----
+function moveToward(u, tx, ty, speed, dt) {
+  const dx = tx - u.x, dy = ty - u.y, d = Math.hypot(dx, dy);
+  if (d < 1) return true;
+  const step = Math.min(d, speed * dt);
+  u.x += dx / d * step; u.y += dy / d * step;
+  if (Math.abs(dx) > .5) u.face = dx > 0 ? 1 : -1;
+  u.moving = .15;
+  u.x = Math.max(EDGE, Math.min(MAP_W - EDGE, u.x)); u.y = Math.max(EDGE + 10, Math.min(MAP_H - EDGE, u.y));
+  return false;
+}
+function separate(list) {
+  for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+    const a = list[i], b = list[j];
+    if (a.dead || b.dead) continue;
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || .01, min = (a.side === "hero" ? 12 : 9) * Math.max(a.scale, b.scale);
+    if (d < min) { const p = (min - d) / 2; a.x -= dx / d * p; a.y -= dy / d * p; b.x += dx / d * p; b.y += dy / d * p; }
+  }
+}
+
+function heroUpdate(h, dt) {
+  if (h.lunge > 0) h.lunge -= dt;
+  if (h.flash > 0) h.flash -= dt;
+  if (h.moving > 0) h.moving -= dt;
+  if (h.dead) { if (h.dying > 0) h.dying -= dt; return; }
+  h.buffs = h.buffs.filter(b => (b.t -= dt) > 0);
+  if (h.taunt > 0) h.taunt -= dt;
+  if (h.clone) { h.clone.t -= dt; if (h.clone.t <= 0) h.clone = null; }
+  h.skillCd = h.skillCd.map(c => Math.max(0, c - dt));
+  const lead = leader();
+  if (B.moveTo) {
+    const f = FORM[B.heroes.indexOf(h)] || [0, 0];
+    moveToward(h, B.moveTo.x + f[0], B.moveTo.y + f[1], 52, dt);
+    return;
+  }
+  const tgt = heroTarget(h);
+  if (tgt) {
+    const range = (h.ranged ? RANGED_RANGE : MELEE_RANGE) + (tgt.boss ? 8 : 0);
+    if (dist(h, tgt) > range) moveToward(h, tgt.x, tgt.y, 38, dt);
+    else {
+      h.face = tgt.x > h.x ? 1 : -1;
+      h.cd -= dt;
+      if (h.cd <= 0) { basicAttack(h, tgt); h.cd = 100 / spdOf(h); }
+    }
+  } else if (h !== lead && lead) {
+    const f = FORM[B.heroes.indexOf(h)] || [0, 0];
+    if (dist(h, { x: lead.x + f[0], y: lead.y + f[1] }) > 4) moveToward(h, lead.x + f[0], lead.y + f[1], 40, dt);
+  }
+  if (S.auto) autoSkill(h);
+}
+function basicAttack(h, tgt) {
+  h.swings++;
+  const hit = () => {
+    damage(h, tgt, 1, { basic: true });
+    if (h.clone && !tgt.dead) damage(h, tgt, h.clone.power, {});
+  };
+  if (h.ranged) {
     const b = unitBox(tgt);
-    B.proj.push({ x: u.x + (u.side === "hero" ? 8 : -8), y: u.y - 14, tx: tgt.x, ty: b.y + b.h / 2, t: 0, dur: .22, color: u.color, fn: () => damage(u, tgt, 1) });
-  } else {
-    u.lunge = .18;
-    B.later.push({ t: .08, fn: () => damage(u, tgt, 1) });
-  }
-  if (u.side === "hero") u.energy = Math.min(100, u.energy + (HEROES[u.id].role === "healer" ? 24 : 20));
+    B.proj.push({ x: h.x + h.face * 6, y: h.y - 12, tx: tgt.x, ty: b.y + b.h / 2, t: 0, dur: .22, color: h.color, fn: hit });
+  } else { h.lunge = .18; B.later.push({ t: .08, fn: hit }); }
 }
 
-function castSkill(u) {
-  if (u.dead || u.energy < 100 || B.cutin || B.state !== "fight" || !alive(B.foes).length) return;
-  u.energy = 0;
-  bump("bursts");
-  B.cutin = { t: 0, dur: .75, u, sk: HEROES[u.id].skill };
-  renderParty();
-}
-function applySkill(u, sk) {
-  const team = alive(B.heroes);
-  if (sk.kind === "hit") {
-    for (let i = 0; i < sk.hits; i++) B.later.push({ t: i * .09, fn: () => {
-      const tgt = chooseTarget(u, sk.target);
-      if (tgt) { damage(u, tgt, sk.mult, { crit: sk.crit, lifesteal: sk.lifesteal, skill: true }); const b = unitBox(tgt); burst(tgt.x, b.y + b.h / 2, u.color, 6, 1.2); }
-    } });
-    u.lunge = .25;
-  } else if (sk.kind === "aoe") {
-    alive(B.foes).forEach((f, i) => B.later.push({ t: i * .06, fn: () => {
-      if (f.dead) return;
-      damage(u, f, sk.mult, { skill: true });
-      if (sk.burn) f.burn = { dps: atkOf(u) * .35, t: sk.burn };
-      if (sk.slow) f.slow = sk.slow;
-      const b = unitBox(f); burst(f.x, b.y + b.h / 2, u.color, 12, 1.5);
-    } }));
-    B.shake = .2;
-  } else if (sk.kind === "heal") {
-    team.forEach(h => { heal(h, h.maxHp * sk.pct); burst(h.x, h.y - 12, "#8affb8", 8); });
-  } else if (sk.kind === "shield") {
-    team.forEach(h => { h.shield += u.maxHp * sk.pct; burst(h.x, h.y - 12, "#9fdcff", 6); });
+function foeUpdate(f, dt) {
+  if (f.lunge > 0) f.lunge -= dt;
+  if (f.flash > 0) f.flash -= dt;
+  if (f.moving > 0) f.moving -= dt;
+  if (f.dead) { if (f.dying > 0) f.dying -= dt; return; }
+  if (f.mark > 0) f.mark -= dt;
+  if (f.chill > 0) f.chill -= dt;
+  if (f.burn) {
+    f.burn.t -= dt; f.burn.acc = (f.burn.acc || 0) + dt;
+    if (f.burn.acc >= .5) { f.burn.acc = 0; const d = Math.max(1, Math.round(f.burn.dps * .5)); f.hp -= d; addNum(f.x, unitBox(f).y, fmt(d), "#ff9a4a"); if (f.hp <= 0) return kill(f); }
+    if (f.burn && f.burn.t <= 0) f.burn = null;
   }
-  if (sk.atk) team.forEach(h => { h.buffs.push({ atk: sk.atk, t: sk.dur }); burst(h.x, h.y - 16, "#ffd84a", 5); });
-  if (sk.taunt) u.taunt = sk.taunt;
-}
-
-// Monster traits that need more than "stand and swing"
-function foeSpecial(f, dt) {
-  if (f.trait === "bomber") {
-    const front = alive(B.heroes).reduce((a, b) => !a || b.x > a.x ? b : a, null);
-    if (!front) return true;
-    f.x -= dt * 20 * (f.slow > 0 ? .5 : 1);
-    if (f.x <= front.x + 12) {
-      // boom: big hit on whoever it reached, a splash on the rest
-      alive(B.heroes).forEach(h => {
-        const dmg = f.atk * (h === front ? 4 : 1.5);
-        let taken = Math.max(1, Math.round(dmg * dmg / (dmg + h.def)));
-        if (h.shield > 0) { const s = Math.min(h.shield, taken); h.shield -= s; taken -= s; }
-        h.hp -= taken; h.flash = .12; addNum(h.x, h.y - 26, fmt(taken), "#ff9a4a", true);
-        if (h.hp <= 0) kill(h);
-      });
-      burst(f.x, f.y - 8, "#ffb04a", 24, 1.8); burst(f.x, f.y - 8, "#fff2d8", 10, 1);
-      B.shake = .3;
-      f.hp = 0; f.dead = true; f.dying = .1; f.gold = 0;
-      if (B.focus === f) B.focus = null;
-    }
-    return true; // bombers never stop to swing
+  if (f.frozen > 0) { f.frozen -= dt; return; }
+  if (f.stun > 0) { f.stun -= dt; return; }
+  const slow = f.chill > 0 ? .5 : 1;
+  const tgt = foeTarget(f);
+  if (!f.aggro && tgt && dist(f, tgt) < AGGRO) aggroFoe(f);
+  if (!f.aggro || !tgt) {
+    // idle: amble around home
+    if (!f.wander || dist(f, f.wander) < 2) f.wander = { x: f.homeX + rand(-16, 16), y: f.homeY + rand(-12, 12) };
+    moveToward(f, f.wander.x, f.wander.y, 8, dt);
+    return;
   }
   if (f.trait === "healer") {
     f.healCd -= dt;
     if (f.healCd <= 0) {
       f.healCd = 4.5;
-      const hurt = alive(B.foes).filter(x => x !== f && x.hp < x.maxHp).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
-      if (hurt) { const amt = Math.round(hurt.maxHp * .15); hurt.hp = Math.min(hurt.maxHp, hurt.hp + amt); addNum(hurt.x, unitBox(hurt).y - 2, "+" + fmt(amt), "#8affb8"); burst(hurt.x, hurt.y - 10, "#8affb8", 8); burst(f.x, f.y - 12, "#8affb8", 4); }
+      const hurt = alive(B.foes).filter(x => x !== f && x.hp < x.maxHp && dist(x, f) < 70).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+      if (hurt) { const amt = Math.round(hurt.maxHp * .15); hurt.hp = Math.min(hurt.maxHp, hurt.hp + amt); addNum(hurt.x, unitBox(hurt).y - 2, "+" + fmt(amt), "#8affb8"); burst(hurt.x, hurt.y - 10, "#8affb8", 8); ring(f.x, f.y - 4, 10, "#8affb8", .4); }
     }
   }
-  if (f.boss) return bossUpdate(f, dt);
-  return false;
+  if (f.trait === "bomber") {
+    if (moveToward(f, tgt.x, tgt.y, 30 * slow, dt) || dist(f, tgt) < 9) {
+      alive(B.heroes).forEach(h => { const d = dist(h, f); if (d < 26) hurtHero(h, f.atk * (d < 10 ? 4 : 1.5)); });
+      ring(f.x, f.y - 4, 26, "#ffb04a", .45); burst(f.x, f.y - 8, "#ffb04a", 24, 1.8);
+      B.shake = .3;
+      f.hp = 0; f.dead = true; f.dying = .1; f.gold = 0; B.kills++;
+      if (B.focus === f) B.focus = null;
+      if (B.kills >= B.quota && !B.boss) spawnBoss();
+      renderStageInfo();
+    }
+    return;
+  }
+  if (f.boss && bossUpdate(f, tgt, dt)) return;
+  const range = f.ranged ? 48 : MELEE_RANGE + (f.boss ? 10 : 0);
+  if (dist(f, tgt) > range) { moveToward(f, tgt.x, tgt.y, (f.boss ? 16 : 22) * slow, dt); return; }
+  f.face = tgt.x > f.x ? 1 : -1;
+  f.cd -= dt * slow;
+  if (f.cd > 0) return;
+  f.cd = 100 / f.spd * 1.2;
+  if (f.ranged) {
+    const b = unitBox(f);
+    B.proj.push({ x: f.x, y: b.y + b.h / 2, tx: tgt.x, ty: tgt.y - 10, t: 0, dur: .45, color: "#ff5a9a", orb: true, fn: () => hurtHero(tgt, f.atk, f) });
+  } else { f.lunge = .15; hurtHero(tgt, f.atk, f); }
 }
-function bossUpdate(f, dt) {
+// The boss's big attack: a red circle on the ground. Step out of it or break it with taps and skills.
+function bossUpdate(f, tgt, dt) {
   if (!f.enraged && f.hp < f.maxHp * .3) { f.enraged = true; f.spd *= 1.5; addNum(f.x, unitBox(f).y - 8, "โกรธแล้ว!", "#ff5a7a", true); B.shake = .25; }
   if (f.summoned < 1 && f.hp < f.maxHp * .66 || f.summoned < 2 && f.hp < f.maxHp * .33) { f.summoned++; summon(f); }
-  if (f.stun > 0) { f.stun -= dt; return true; }
   if (f.charge) {
     const c = f.charge;
     c.t += dt;
     if (c.gauge >= c.need) {
       f.charge = null; f.stun = 3; f.chargeCd = 9;
       addNum(f.x, unitBox(f).y - 10, "BREAK!", "#ffd84a", true);
-      burst(f.x, f.y - 20, "#ffd84a", 26, 2); B.shake = .3;
+      burst(f.x, f.y - 20, "#ffd84a", 30, 2); B.shake = .3;
     } else if (c.t >= c.dur) {
       f.charge = null; f.chargeCd = 9;
       B.banner = { text: f.move, sub: "", t: .9, boss: true };
-      alive(B.heroes).forEach((h, i) => B.later.push({ t: i * .1, fn: () => {
-        const dmg = atkOf(f) * 3.2;
-        let taken = Math.max(1, Math.round(dmg * dmg / (dmg + h.def)));
-        if (h.shield > 0) { const s = Math.min(h.shield, taken); h.shield -= s; taken -= s; }
-        h.hp -= taken; h.flash = .15; addNum(h.x, h.y - 26, fmt(taken), "#ff5a7a", true); burst(h.x, h.y - 12, "#ff5a7a", 12, 1.4);
-        if (h.hp <= 0) kill(h);
-      } }));
+      ring(c.x, c.y, c.r, "#ff5a7a", .5); burst(c.x, c.y, "#ff5a7a", 30, 2.2);
+      alive(B.heroes).forEach(h => { if (dist(h, c) < c.r) hurtHero(h, atkOf(f) * 3.6); else addNum(h.x, unitBox(h).y - 4, "หลบได้!", "#7affb0"); });
       B.shake = .4;
     }
-    return true; // no normal swings while charging
+    return true;
   }
   f.chargeCd -= dt;
-  // normal hits alone rarely fill this in time; taps and skills are what break it
-  if (f.chargeCd <= 0) f.charge = { t: 0, dur: 3.2, gauge: 0, need: f.maxHp * .3 };
+  // normal hits alone rarely fill the break gauge in time; taps and skills are what break it
+  if (f.chargeCd <= 0) f.charge = { t: 0, dur: 3.4, gauge: 0, need: f.maxHp * .3, x: f.x, y: f.y, r: 46 };
   return false;
+}
+
+// ---- Skills ----
+function skillReady(h, i) { return !h.dead && skillUnlocked(h.id, i) && h.skillCd[i] <= 0; }
+function skillUsable(h, sk) {
+  if (["heal"].includes(sk.kind)) return alive(B.heroes).some(x => x.hp < x.maxHp * .7);
+  if (sk.kind === "revive") return B.heroes.some(x => x.dead);
+  const near = foesNear(h, 90);
+  if (sk.kind === "guard" || sk.kind === "buff" || sk.kind === "clone") return near.some(f => f.aggro);
+  return near.length > 0;
+}
+function autoSkill(h) {
+  if (B.cutin || B.state !== "fight") return;
+  for (let i = 1; i >= 0; i--) if (skillReady(h, i) && skillUsable(h, HEROES[h.id].skills[i])) return castSkill(h, i);
+}
+function castSkill(h, i) {
+  const sk = HEROES[h.id].skills[i];
+  if (!skillReady(h, i) || B.cutin || B.state !== "fight") return false;
+  if (!skillUsable(h, sk)) { toast(`${sk.name}: ยังไม่มีเป้าหมายใกล้ๆ`); return false; }
+  h.skillCd[i] = sk.cd;
+  bump("bursts");
+  if (i === 1) B.cutin = { t: 0, dur: .6, u: h, sk };
+  else { addNum(h.x, unitBox(h).y - 8, sk.name, h.color, true); applySkill(h, sk); }
+  renderParty();
+  return true;
+}
+function applySkill(u, sk) {
+  const team = alive(B.heroes);
+  const tgt = (B.focus && !B.focus.dead && dist(u, B.focus) < 110 ? B.focus : null) || nearest(u, alive(B.foes), 110);
+  const opt = { skill: true, el: sk.el, freeze: sk.freeze, crit: sk.crit, lifesteal: sk.lifesteal, mark: sk.mark, big: true };
+  const slash = f => { const b = unitBox(f); B.fx.push({ x: f.x, y: b.y + b.h / 2, vx: 0, vy: 0, t: 0, life: .18, color: "slash", size: 0, c: u.color }); };
+  const area = (cx, cy, r) => alive(B.foes).filter(f => Math.hypot(f.x - cx, f.y - cy) <= r);
+  if (sk.kind === "strike" && tgt) {
+    for (let i = 0; i < sk.hits; i++) B.later.push({ t: i * .09, fn: () => { if (!tgt.dead) { slash(tgt); damage(u, tgt, sk.mult, opt); } } });
+    u.lunge = .25;
+  } else if (sk.kind === "multi" || sk.kind === "lowest") {
+    for (let i = 0; i < sk.hits; i++) B.later.push({ t: i * .08, fn: () => {
+      const pool = foesNear(u, 110);
+      const f = sk.kind === "lowest" ? pool.sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0] : pick(pool);
+      if (f) { slash(f); damage(u, f, sk.mult, opt); }
+    } });
+  } else if ((sk.kind === "blast" || sk.kind === "rain" || sk.kind === "leap") && tgt) {
+    const cx = tgt.x, cy = tgt.y;
+    if (sk.kind === "leap") { burst(u.x, u.y - 8, u.color, 10, 1.2); u.x = cx - u.face * 10; u.y = cy + 4; }
+    const ticks = sk.ticks || 1;
+    B.zones.push({ x: cx, y: cy, r: sk.r, color: u.color, t: 0, life: .3 + ticks * .3, fill: true });
+    for (let i = 0; i < ticks; i++) B.later.push({ t: .15 + i * .3, fn: () => {
+      ring(cx, cy, sk.r, sk.el === "fire" ? "#ffb04a" : u.color, .35);
+      burst(cx, cy - 4, sk.el === "fire" ? "#ffb04a" : u.color, sk.big ? 28 : 12, sk.big ? 2 : 1.3);
+      area(cx, cy, sk.r).forEach(f => damage(u, f, sk.mult, opt));
+      if (sk.big || sk.kind === "leap") B.shake = .3;
+    } });
+  } else if (sk.kind === "nova") {
+    const c = sk.at === "target" && tgt ? tgt : u;
+    const cx = c.x, cy = c.y;
+    for (let i = 0; i < sk.ticks; i++) B.later.push({ t: i * .35, fn: () => {
+      ring(cx, cy - 2, sk.r, sk.el === "ice" ? "#d9f3ff" : sk.el === "fire" ? "#ff7a4a" : u.color, .4);
+      burst(cx, cy - 4, sk.el === "ice" ? "#d9f3ff" : u.color, 14, 1.6);
+      area(cx, cy, sk.r).forEach(f => { damage(u, f, sk.mult, opt); if (sk.stun) f.stun = sk.stun; });
+    } });
+    B.shake = .2;
+  } else if (sk.kind === "heal") {
+    team.forEach(h => { healHero(h, h.maxHp * sk.pct); if (sk.shield) h.shield += h.maxHp * sk.shield; ring(h.x, h.y - 2, 8, "#8affb8", .5); burst(h.x, h.y - 12, "#8affb8", 8); });
+  } else if (sk.kind === "guard") {
+    team.forEach(h => { h.shield += u.maxHp * sk.pct; burst(h.x, h.y - 12, "#9fdcff", 6); });
+    u.taunt = sk.taunt; ring(u.x, u.y - 2, 30, "#ffd84a", .5);
+  } else if (sk.kind === "revive") {
+    B.heroes.forEach(h => { if (h.dead) { h.dead = false; h.hp = h.maxHp * sk.pct; h.dying = 0; ring(h.x, h.y - 2, 14, "#fff0a0", .7); burst(h.x, h.y - 12, "#fff0a0", 20, 1.5); addNum(h.x, h.y - 26, "ฟื้นคืนชีพ!", "#fff0a0", true); } });
+  } else if (sk.kind === "clone") {
+    u.clone = { t: sk.dur, power: sk.power };
+    burst(u.x, u.y - 10, "#5a4a8a", 16, 1.4);
+  }
+  if (sk.kind === "buff" || sk.atk) {
+    team.forEach(h => { h.buffs.push({ atk: sk.atk || 0, spd: sk.spd || 0, t: sk.dur }); burst(h.x, h.y - 16, "#ffd84a", 5); });
+    if (sk.cdr) team.forEach(h => { h.skillCd = h.skillCd.map(c => Math.max(0, c - sk.cdr)); });
+    ring(u.x, u.y - 2, 36, "#ffd84a", .5);
+  }
+}
+
+// ---- Loot ----
+function rollRarityFrom(table) { const r = Math.random(); return r < table.SSR ? "SSR" : r < table.SSR + table.SR ? "SR" : "R"; }
+function maybeDrop(u) {
+  const kind = u.boss ? "boss" : "mob";
+  if (Math.random() >= DROP_RATE[kind]) return;
+  const rarity = rollRarityFrom(DROP_RARITY[kind]);
+  const id = pick(Object.keys(GEAR).filter(x => GEAR[x].rarity === rarity));
+  if (rarity === "R" && S.autoSalvageR) {
+    const g = { id, plus: 0 }; const gold = gearSalvage(g);
+    S.gold += gold; addNum(u.x, u.y - 30, `ย่อย ${GEAR[id].name} +${fmt(gold)}G`, "#9fb3c8");
+    return;
+  }
+  const g = newGear(id);
+  S.gear.push(g);
+  addNum(u.x, u.y - 30, `ได้ ${GEAR[id].name}!`, RARITY[rarity].color, true);
+  if (rarity !== "R") showDrop(g);
 }
 
 function step(dt) {
@@ -451,45 +727,25 @@ function step(dt) {
   }
   B.later = B.later.filter(l => { l.t -= dt; if (l.t <= 0) { l.fn(); return false; } return true; });
   B.proj = B.proj.filter(p => { p.t += dt; if (p.t >= p.dur) { p.fn(); return false; } return true; });
-
-  const all = [...B.heroes, ...B.foes];
-  all.forEach(u => {
-    if (u.lunge > 0) u.lunge -= dt;
-    if (u.flash > 0) u.flash -= dt;
-    if (u.dead) { if (u.dying > 0) u.dying -= dt; return; }
-    u.buffs = u.buffs.filter(b => (b.t -= dt) > 0);
-    if (u.taunt > 0) u.taunt -= dt;
-    if (u.slow > 0) u.slow -= dt;
-    if (u.burn) {
-      u.burn.t -= dt; u.burn.acc = (u.burn.acc || 0) + dt;
-      if (u.burn.acc >= .5) { u.burn.acc = 0; const d = Math.max(1, Math.round(u.burn.dps * .5)); u.hp -= d; addNum(u.x, unitBox(u).y, fmt(d), "#ff9a4a"); if (u.hp <= 0) kill(u); }
-      if (u.burn.t <= 0) u.burn = null;
-    }
-  });
-
-  if (B.state === "between") {
-    B.timer -= dt;
-    if (B.timer <= 0) spawnWave();
-    return;
-  }
   if (B.state === "clear" || B.state === "fail") {
     B.timer -= dt;
     if (B.timer <= 0) B.state === "clear" ? afterClear() : afterFail();
     return;
   }
-
-  all.forEach(u => {
-    if (u.dead) return;
-    if (u.side === "foe" && foeSpecial(u, dt)) return;
-    u.cd -= dt * (u.slow > 0 ? .55 : 1);
-    if (u.cd <= 0) { basicAttack(u); u.cd = 100 / u.spd * (u.side === "foe" ? 1.15 : 1); }
-    if (u.side === "hero" && S.auto && u.energy >= 100) castSkill(u);
-  });
-
-  if (!alive(B.foes).length && !B.later.length && !B.proj.length) {
-    if (B.wave < WAVES_PER_STAGE) { B.wave++; B.state = "between"; B.timer = .7; renderStageInfo(); }
-    else { B.state = "clear"; B.timer = 1.1; B.banner = { text: "ผ่านด่าน!", sub: "", t: 1.1 }; }
-  } else if (!alive(B.heroes).length) {
+  if (B.moveTo) { B.moveTo.t -= dt; const l = leader(); if (B.moveTo.t <= 0 || (l && dist(l, B.moveTo) < 3)) B.moveTo = null; }
+  B.heroes.forEach(h => heroUpdate(h, dt));
+  B.foes.forEach(f => foeUpdate(f, dt));
+  separate(alive(B.heroes)); separate(alive(B.foes));
+  B.foes = B.foes.filter(f => !f.dead || f.dying > 0);
+  // if the map runs dry before the quota (bombers, small packs), bring the boss anyway
+  if (!B.boss && !alive(B.foes).length) spawnBoss();
+  // camera follows the leader
+  const l = leader();
+  if (l) {
+    const tx = Math.max(0, Math.min(MAP_W - LW, l.x - LW / 2)), ty = Math.max(0, Math.min(MAP_H - LH, l.y - LH / 2 - 10));
+    B.cam.x += (tx - B.cam.x) * Math.min(1, dt * 4); B.cam.y += (ty - B.cam.y) * Math.min(1, dt * 4);
+  }
+  if (!alive(B.heroes).length) {
     B.state = "fail"; B.timer = 1.6; B.banner = { text: "ถอยก่อน…", sub: "อัพเกรดทีมแล้วค่อยลุยใหม่", t: 1.6, bad: true };
   }
 }
@@ -522,6 +778,7 @@ function afterFail() {
 function updateFx(dt) {
   B.fx = B.fx.filter(p => { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.color !== "chest") p.vy += 120 * dt; return p.t < p.life; });
   B.nums = B.nums.filter(n => { n.t += dt; return n.t < .9; });
+  B.zones = B.zones.filter(z => (z.t += dt) < z.life);
 }
 
 // ---------- Drawing ----------
@@ -534,135 +791,128 @@ function resize() {
   cv.style.width = (LW * SCALE / dpr) + "px"; cv.style.height = (LH * SCALE / dpr) + "px";
 }
 
-const BG = {};
-function bgCanvas(theme) {
-  if (BG[theme]) return BG[theme];
-  const c = document.createElement("canvas"); c.width = LW; c.height = LH;
-  const x = c.getContext("2d");
-  const R = (cx, cy, w, h, col) => { x.fillStyle = col; x.fillRect(cx, cy, w, h); };
-  let seed = 7;
-  const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-  const o = GROUND - 104; // scenery was laid out for a ground line at 104
-  if (theme === "alley") {
-    R(0, 0, LW, LH, "#2a1a1e");
-    for (let row = 0; row < 20; row++) for (let col = -1; col < 14; col++) R(col * 12 + (row % 2 ? 6 : 0), row * 6, 11, 5, ["#4a2c2a", "#43282a", "#512f2c", "#3e2526"][Math.floor(rnd() * 4)]);
-    R(10, 18 + o, 40, 44, "#1a1216"); R(12, 20 + o, 36, 40, "#22303a");
-    for (let i = 0; i < 9; i++) R(12, 22 + o + i * 4, 36, 1, "#15202a");
-    R(12, 20 + o, 36, 2, "#e8a050");
-    R(64, 14 + o, 36, 20, "#1c3a2a"); R(66, 16 + o, 32, 16, "#24503a");
-    R(74, 20 + o, 12, 1, "#7affb0"); R(74, 20 + o, 1, 6, "#7affb0"); R(85, 20 + o, 1, 6, "#7affb0"); R(75, 26 + o, 10, 1, "#7affb0");
-    R(86, 21 + o, 3, 1, "#7affb0"); R(88, 21 + o, 1, 3, "#7affb0"); R(86, 23 + o, 3, 1, "#7affb0"); R(72, 28 + o, 16, 1, "#7affb0");
-    R(77, 16 + o, 1, 2, "#ff7ab0"); R(80, 15 + o, 1, 3, "#ff7ab0"); R(83, 16 + o, 1, 2, "#ff7ab0");
-    R(122, 8 + o, 30, 50, "#1a1216"); R(124, 10 + o, 26, 46, "#3a2a20");
-    for (let i = 0; i < 4; i++) { R(126, 12 + o + i * 11, 22, 1, "#c9a24a"); R(128 + i * 4, 6 + o + i * 11, 4, 5, "#e8e0cc"); }
-    for (let i = 0; i < 6; i++) { const lx = 8 + i * 28; R(lx, 0, 1, 6 + o, "#1a1216"); R(lx - 2, 6 + o, 5, 3, "#f2d16b"); }
-    R(0, GROUND - 6, LW, LH, "#3a4a4a"); R(0, GROUND - 6, LW, 2, "#6a8a84"); R(0, GROUND - 4, LW, 1, "#2a3434");
-    for (let i = 0; i < 30; i++) R(Math.floor(rnd() * LW), GROUND + Math.floor(rnd() * (LH - GROUND)), 3, 1, "#2e3c3c");
-  } else if (theme === "forest") {
-    R(0, 0, LW, LH, "#0e1e22");
-    for (let i = 0; i < 50; i++) R(Math.floor(rnd() * LW), Math.floor(rnd() * 60), 1, 1, "#3a6a6a");
-    R(110, 10, 12, 12, "#e8f0d0"); R(108, 12, 16, 8, "#e8f0d0"); R(112, 12, 4, 4, "#c8d0b0");
-    for (let i = 0; i < 9; i++) { const tx = i * 19 - 4, th = 60 + Math.floor(rnd() * 20); R(tx + 4, GROUND - th, 6, th, "#1a2a24"); R(tx - 4, GROUND - th - 18, 22, 26, "#16302a"); R(tx - 1, GROUND - th - 24, 16, 10, "#1c3a30"); }
-    for (let i = 0; i < 7; i++) { const tx = i * 26 + 6, th = 46 + Math.floor(rnd() * 16); R(tx + 3, GROUND - th, 7, th, "#24382e"); R(tx - 6, GROUND - th - 14, 26, 22, "#22493a"); R(tx - 2, GROUND - th - 20, 18, 10, "#2a5a46"); }
-    R(0, GROUND - 6, LW, LH, "#1e3a2a"); R(0, GROUND - 6, LW, 2, "#3a6a4a");
-    for (let i = 0; i < 40; i++) R(Math.floor(rnd() * LW), GROUND - 7 + Math.floor(rnd() * 3) * (rnd() < .5 ? 0 : 10), 1, 2, "#4a8a5a");
-  } else if (theme === "cave") {
-    R(0, 0, LW, LH, "#170f26");
-    for (let i = 0; i < 14; i++) { const sx = i * 12 + Math.floor(rnd() * 6), sh = 8 + Math.floor(rnd() * 22); R(sx, 0, 6, sh, "#22183a"); R(sx + 2, sh, 2, 4, "#22183a"); }
-    for (let i = 0; i < 10; i++) { const cx = Math.floor(rnd() * LW), cy = 36 + Math.floor(rnd() * 60), h = 6 + Math.floor(rnd() * 8); R(cx, cy, 3, h, "#7a4ad0"); R(cx + 1, cy - 2, 1, 2, "#c9a8ff"); R(cx, cy, 1, h, "#b98cff"); }
-    R(0, GROUND - 6, LW, LH, "#2a1e3a"); R(0, GROUND - 6, LW, 2, "#4a3a6a");
-    for (let i = 0; i < 6; i++) { const cx = Math.floor(rnd() * LW); R(cx, GROUND - 12, 3, 7, "#9af0ff"); R(cx + 1, GROUND - 14, 1, 2, "#e0ffff"); }
-  } else {
-    R(0, 0, LW, LH, "#120e2a");
-    for (let i = 0; i < 80; i++) R(Math.floor(rnd() * LW), Math.floor(rnd() * 100), 1, 1, rnd() < .2 ? "#ffd76a" : "#8a8ac8");
-    R(18, 12, 14, 14, "#f0e8c8"); R(22, 12, 10, 10, "#120e2a");
-    R(60, 20 + o, 40, 84, "#1e1840"); R(64, 24 + o, 32, 80, "#26204e");
-    for (let i = 0; i < 6; i++) { R(72, 30 + o + i * 12, 4, 6, "#ffd76a"); R(84, 30 + o + i * 12, 4, 6, i % 2 ? "#2a2458" : "#ffd76a"); }
-    R(56, 14 + o, 48, 8, "#2e2860"); R(76, 4 + o, 8, 10, "#2e2860"); R(79, o, 2, 4, "#ffd76a");
-    R(0, GROUND - 6, LW, LH, "#2a2450"); R(0, GROUND - 6, LW, 2, "#4a4480");
-    for (let i = 0; i < 16; i++) R(i * 10, GROUND - 4, 9, 1, "#221e44");
-  }
-  return (BG[theme] = c);
-}
-
-function drawBg(theme) {
-  const art = ART["bg:" + theme];
+function drawMap() {
+  const art = ART["bg:" + B.map.theme];
+  const cx = Math.round(B.cam.x), cy = Math.round(B.cam.y);
   if (art) {
+    // a generated picture is tiled under the whole map
     ctx.imageSmoothingEnabled = true;
-    const s = Math.max(LW / art.width, LH / art.height), w = art.width * s, h = art.height * s;
-    ctx.drawImage(art, (LW - w) / 2, (LH - h) / 2, w, h);
+    const tile = 240;
+    for (let y = -(cy % tile); y < LH; y += tile) for (let x = -(cx % tile); x < LW; x += tile) ctx.drawImage(art, x, y, tile, tile);
     ctx.imageSmoothingEnabled = false;
-  } else ctx.drawImage(bgCanvas(theme), 0, 0);
-  const t = B.t;
-  if (theme === "forest") for (let i = 0; i < 12; i++) {
-    const fx = (i * 37 + Math.sin(t * .7 + i) * 10 + LW) % LW, fy = 40 + (i * 23) % 60 + Math.sin(t * 1.3 + i * 2) * 4;
-    ctx.fillStyle = `rgba(220,255,140,${.4 + .6 * Math.abs(Math.sin(t * 2 + i))})`; ctx.fillRect(fx | 0, fy | 0, 1, 1);
-  } else if (theme === "alley" && !ART["bg:alley"]) {
-    if (Math.sin(t * 9) > .93) { ctx.fillStyle = "rgba(20,30,24,.7)"; ctx.fillRect(66, 16 + GROUND - 104, 32, 16); }
-  } else if (theme === "tower") for (let i = 0; i < 6; i++) {
-    if (Math.sin(t * 3 + i * 7) > .9) { ctx.fillStyle = "#fff"; ctx.fillRect((i * 53) % LW, (i * 17) % 90, 1, 1); }
-  } else if (theme === "cave") for (let i = 0; i < 6; i++) {
-    ctx.fillStyle = `rgba(185,140,255,${.3 + .3 * Math.sin(t * 2 + i)})`; ctx.fillRect((i * 29 + t * 3) % LW | 0, 20 + (i * 31) % 80, 1, 1);
+  } else ctx.drawImage(B.map.canvas, cx, cy, LW, LH, 0, 0, LW, LH);
+  if (B.map.theme === "forest") for (let i = 0; i < 12; i++) {
+    const fx = (i * 37 + Math.sin(B.t * .7 + i) * 10 + LW) % LW, fy = (i * 23 + Math.sin(B.t * 1.3 + i * 2) * 4) % LH;
+    ctx.fillStyle = `rgba(220,255,140,${.4 + .6 * Math.abs(Math.sin(B.t * 2 + i))})`; ctx.fillRect(fx | 0, fy | 0, 1, 1);
   }
 }
 
 function drawUnit(u) {
-  if (u.dead && u.dying <= 0) return;
-  const s = sprite(u.sprite), art = ART[u.art], flip = u.side === "foe";
-  const bob = u.dead ? 0 : Math.round(Math.sin(B.t * 3 + u.slot * 1.7) * .6);
-  const dir = flip ? -1 : 1;
-  const lungeOff = u.lunge > 0 ? Math.round(Math.sin((1 - u.lunge / .18) * Math.PI) * 6) * dir : 0;
+  if (u.dead && u.dying <= 0 && u.side === "foe") return;
+  const s = sprite(u.sprite), art = ART[u.art], flip = u.face < 0;
+  const walk = u.moving > 0 ? Math.round(Math.abs(Math.sin(B.t * 12 + u.x)) * -1.5) : Math.round(Math.sin(B.t * 3 + (u.slot || 0) * 1.7) * .6);
+  const lungeOff = u.lunge > 0 ? Math.round(Math.sin((1 - u.lunge / .18) * Math.PI) * 5) * u.face : 0;
   const b = unitBox(u), w = b.w, h = b.h;
-  const shake = u.charge ? Math.round(rand(-1, 1)) : 0;
-  const x = Math.round(b.x + lungeOff + shake), y = Math.round(b.y + bob + (u.dead ? (1 - u.dying / .5) * 6 : 0));
-  ctx.globalAlpha = u.dead ? Math.max(0, u.dying / .5) : 1;
-  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(Math.round(u.x - w * .3), u.y, Math.round(w * .6), 2);
+  const jitter = u.charge ? Math.round(rand(-1, 1)) : 0;
+  const x = Math.round(b.x + lungeOff + jitter - B.cam.x), y = Math.round(b.y + walk - B.cam.y);
+  const fx = Math.round(u.x - B.cam.x), fy = Math.round(u.y - B.cam.y);
+  if (x > LW + 20 || x + w < -20 || y > LH + 20 || y + h < -30) return;
+  ctx.globalAlpha = u.dead ? (u.side === "hero" ? .35 : Math.max(0, u.dying / .5)) : 1;
+  ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(fx - Math.round(w * .3), fy, Math.round(w * .6), 2);
+  if (u.side === "hero" && u.taunt > 0) { ctx.strokeStyle = "rgba(255,216,74,.6)"; ctx.beginPath(); ctx.ellipse(fx, fy, 9, 4, 0, 0, Math.PI * 2); ctx.stroke(); }
+  if (u.clone && !u.dead) { ctx.globalAlpha = .45; ctx.drawImage(flip ? sprite(u.sprite).flip || s.img : s.img, x - u.face * 10, y + 2, w, h); ctx.globalAlpha = 1; }
   ctx.save();
   if (u.enraged) ctx.filter = "sepia(1) saturate(4) hue-rotate(-30deg)";
-  if (u.stun > 0) ctx.filter = "grayscale(.8)";
+  if (u.stun > 0 || u.dead && u.side === "hero") ctx.filter = "grayscale(.9)";
+  if (u.frozen > 0) ctx.filter = "hue-rotate(160deg) brightness(1.4)";
   if (art) {
     ctx.imageSmoothingEnabled = true;
-    if (flip) { ctx.translate(Math.round(u.x + lungeOff), 0); ctx.scale(-1, 1); ctx.translate(-Math.round(u.x + lungeOff), 0); }
+    if (flip) { ctx.translate(fx + lungeOff, 0); ctx.scale(-1, 1); ctx.translate(-(fx + lungeOff), 0); }
     if (u.flash > 0) ctx.filter = "brightness(3)";
     const sc = Math.min(w / art.width, h / art.height), aw = art.width * sc, ah = art.height * sc;
-    ctx.drawImage(art, Math.round(u.x + lungeOff - aw / 2), y + h - ah, aw, ah);
+    ctx.drawImage(art, fx + lungeOff - aw / 2, y + h - ah, aw, ah);
     ctx.imageSmoothingEnabled = false;
   } else {
-    const img = u.flash > 0 ? (flip ? s.whiteFlip : s.white) : (flip ? s.flip : s.img);
+    const img = u.flash > 0 ? (flip ? s.whiteFlip || s.white : s.white) : (flip ? s.flip || s.img : s.img);
     ctx.drawImage(img, x, y, w, h);
   }
   ctx.restore();
-  if (u.dead) { ctx.globalAlpha = 1; return; }
-  if (u.shield > 0 && u.trait !== "shield") { ctx.fillStyle = "rgba(159,220,255,.25)"; ctx.fillRect(x - 1, y + 2, w + 2, h - 2); ctx.fillStyle = "#9fdcff"; ctx.fillRect(x - 1, y + 2, 1, h - 2); ctx.fillRect(x + w, y + 2, 1, h - 2); }
-  if (u.trait === "shield" && u.shield > 0) { ctx.fillStyle = "#9fdcff"; ctx.fillRect(x - 2, y + 3, 2, h - 5); ctx.fillStyle = "rgba(159,220,255,.35)"; ctx.fillRect(x - 4, y + 5, 2, h - 9); }
+  ctx.globalAlpha = 1;
+  if (u.dead) return;
+  if (u.shield > 0 && u.trait !== "shield") { ctx.fillStyle = "rgba(159,220,255,.25)"; ctx.fillRect(x - 1, y + 2, w + 2, h - 2); }
+  if (u.trait === "shield" && u.shield > 0) { ctx.fillStyle = "#9fdcff"; ctx.fillRect(x - 2, y + 3, 2, h - 5); }
   if (u.trait === "bomber") { ctx.fillStyle = B.t % .25 < .12 ? "#ff5a3a" : "#ffd84a"; ctx.fillRect(x + w - 4, y - 1, 2, 2); }
-  if (u.trait === "healer") { ctx.fillStyle = "#8affb8"; ctx.fillRect(Math.round(u.x) - 1, y - 7, 3, 1); ctx.fillRect(Math.round(u.x), y - 8, 1, 3); }
-  if (u.trait === "fast") { ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.fillRect(x + w, y + 6, 3, 1); ctx.fillRect(x + w + 1, y + 10, 4, 1); }
-  if (u.trait === "flyer") { ctx.fillStyle = "rgba(0,0,0,.25)"; ctx.fillRect(Math.round(u.x - 4), u.y, 8, 1); }
-  if (u.taunt > 0) { ctx.fillStyle = "#ffd84a"; ctx.fillRect(Math.round(u.x) - 1, y - 4, 2, 2); }
+  if (u.trait === "healer") { ctx.fillStyle = "#8affb8"; ctx.fillRect(fx - 1, y - 7, 3, 1); ctx.fillRect(fx, y - 8, 1, 3); }
   if (u.burn) { ctx.fillStyle = B.t % .3 < .15 ? "#ff9a4a" : "#ffd84a"; ctx.fillRect(x + w - 3, y + 3, 2, 2); }
-  if (u.slow > 0) { ctx.fillStyle = "#9fdcff"; ctx.fillRect(x + 1, y + 3, 2, 2); }
-  if (u.side === "foe") {
-    const bw = u.boss ? 34 : 14, bx = Math.round(u.x - bw / 2), by = y - 4;
+  if (u.chill > 0) { ctx.fillStyle = "#d9f3ff"; ctx.fillRect(x + 1, y + 3, 2, 2); }
+  if (u.mark > 0) { ctx.fillStyle = "#ff5a7a"; ctx.fillRect(fx - 2, y - 3, 5, 1); ctx.fillRect(fx, y - 5, 1, 5); }
+  // health bars
+  const bw = u.boss ? 34 : u.side === "hero" ? 12 : 14, bx = fx - Math.round(bw / 2), by = y - 4;
+  if (u.side === "hero" || u.hp < u.maxHp || u.boss || u.shieldMax) {
     ctx.fillStyle = "#160f1c"; ctx.fillRect(bx - 1, by - 1, bw + 2, u.shieldMax ? 6 : 4);
     ctx.fillStyle = "#4a2030"; ctx.fillRect(bx, by, bw, 2);
-    ctx.fillStyle = u.boss ? "#ff5a7a" : "#ff7a6a"; ctx.fillRect(bx, by, Math.ceil(bw * u.hp / u.maxHp), 2);
+    ctx.fillStyle = u.side === "hero" ? "#7affb0" : u.boss ? "#ff5a7a" : "#ff7a6a"; ctx.fillRect(bx, by, Math.ceil(bw * u.hp / u.maxHp), 2);
     if (u.shieldMax) { ctx.fillStyle = "#9fdcff"; ctx.fillRect(bx, by + 3, Math.ceil(bw * Math.max(0, u.shield) / u.shieldMax), 1); }
-    if (B.focus === u) { const fy = by - 6 + Math.round(Math.sin(B.t * 6)); ctx.fillStyle = "#7affb0"; ctx.fillRect(Math.round(u.x) - 2, fy, 5, 1); ctx.fillRect(Math.round(u.x) - 1, fy + 1, 3, 1); ctx.fillRect(Math.round(u.x), fy + 2, 1, 1); }
-    if (u.charge) drawCharge(u, bx, by, bw);
-    if (u.stun > 0) pixText("STUN", u.x, by - 6, 5, "#ffd84a", "center", 400);
   }
-  ctx.globalAlpha = 1;
+  if (B.focus === u) { const ay = by - 6 + Math.round(Math.sin(B.t * 6)); ctx.fillStyle = "#7affb0"; ctx.fillRect(fx - 2, ay, 5, 1); ctx.fillRect(fx - 1, ay + 1, 3, 1); ctx.fillRect(fx, ay + 2, 1, 1); }
+  if (u.charge) { const c = u.charge; ctx.fillStyle = "#160f1c"; ctx.fillRect(bx - 1, by - 8, bw + 2, 4); ctx.fillStyle = "#ffd84a"; ctx.fillRect(bx, by - 7, Math.ceil(bw * Math.min(1, c.gauge / c.need)), 2); }
+  if (u.stun > 0) pixText("STUN", fx, by - 6, 5, "#ffd84a", "center", 400);
 }
-// The boss's big attack: red bar is time left, gold bar is how close the team is to breaking it.
-function drawCharge(u, bx, by, bw) {
-  const c = u.charge;
-  ctx.fillStyle = "#160f1c"; ctx.fillRect(bx - 1, by - 13, bw + 2, 7);
-  ctx.fillStyle = "#ff5a7a"; ctx.fillRect(bx, by - 12, Math.ceil(bw * (1 - c.t / c.dur)), 2);
-  ctx.fillStyle = "#ffd84a"; ctx.fillRect(bx, by - 9, Math.ceil(bw * Math.min(1, c.gauge / c.need)), 2);
-  if (B.t % .5 < .3) thaiText("แตะบอส!", u.x, by - 19, 7, "#ffd84a");
-  ctx.strokeStyle = `rgba(255,90,122,${.4 + .3 * Math.sin(B.t * 12)})`; ctx.lineWidth = 1;
-  ctx.strokeRect(1.5, 1.5, LW - 3, LH - 3);
+
+function drawZones() {
+  B.zones.forEach(z => {
+    const k = z.t / z.life, x = z.x - B.cam.x, y = z.y - B.cam.y;
+    ctx.save();
+    ctx.globalAlpha = 1 - k;
+    ctx.strokeStyle = z.color; ctx.lineWidth = z.ring ? 1.5 : 1;
+    ctx.beginPath(); ctx.ellipse(x, y, z.r * (z.ring ? .4 + k * .6 : 1), z.r * .55 * (z.ring ? .4 + k * .6 : 1), 0, 0, Math.PI * 2); ctx.stroke();
+    if (z.fill) { ctx.globalAlpha = .18 * (1 - k); ctx.fillStyle = z.color; ctx.fill(); }
+    ctx.restore();
+  });
+  // boss red circle: fills up as the attack gets closer
+  if (B.boss && B.boss.charge && !B.boss.dead) {
+    const c = B.boss.charge, x = c.x - B.cam.x, y = c.y - B.cam.y, k = c.t / c.dur;
+    ctx.save();
+    ctx.fillStyle = `rgba(255,60,90,${.12 + .1 * Math.sin(B.t * 14)})`;
+    ctx.beginPath(); ctx.ellipse(x, y, c.r, c.r * .55, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "rgba(255,60,90,.28)";
+    ctx.beginPath(); ctx.ellipse(x, y, c.r * k, c.r * .55 * k, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = "#ff5a7a"; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(x, y, c.r, c.r * .55, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+// a pulsing arrow at the screen edge toward the nearest monster when none are in view
+function drawPointer() {
+  const l = leader();
+  if (!l) return;
+  const inView = f => f.x > B.cam.x && f.x < B.cam.x + LW && f.y > B.cam.y && f.y < B.cam.y + LH;
+  const tgt = B.boss && !B.boss.dead ? B.boss : nearest(l, alive(B.foes));
+  if (!tgt || inView(tgt) || (!tgt.boss && alive(B.foes).some(inView))) return;
+  const cx = LW / 2, cy = LH / 2, a = Math.atan2(tgt.y - B.cam.y - cy, tgt.x - B.cam.x - cx);
+  const r = 62 + Math.sin(B.t * 6) * 2, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r * .85;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+  ctx.fillStyle = tgt.boss ? "#ff5a7a" : "#7affb0";
+  ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(-3, -4); ctx.lineTo(-1, 0); ctx.lineTo(-3, 4); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawHud() {
+  const boss = B.boss && !B.boss.dead ? B.boss : null;
+  ctx.fillStyle = "rgba(10,6,14,.6)"; ctx.fillRect(40, 3, 80, boss ? 11 : 5);
+  if (boss) {
+    ctx.fillStyle = "#4a2030"; ctx.fillRect(42, 9, 76, 3);
+    ctx.fillStyle = "#ff5a7a"; ctx.fillRect(42, 9, Math.ceil(76 * boss.hp / boss.maxHp), 3);
+    thaiText(boss.name, 80, 5.5, 5, "#ff9ab0");
+  } else {
+    ctx.fillStyle = "#2a2438"; ctx.fillRect(42, 5, 76, 2);
+    ctx.fillStyle = "#7affb0"; ctx.fillRect(42, 5, Math.ceil(76 * Math.min(1, B.kills / B.quota)), 2);
+  }
+  if (boss && boss.charge) {
+    if (B.t % .5 < .3) thaiText("แตะพื้นหนีวงแดง หรือแตะบอสรัวๆ!", LW / 2, LH - 8, 6, "#ffd84a");
+    ctx.strokeStyle = `rgba(255,90,122,${.4 + .3 * Math.sin(B.t * 12)})`; ctx.lineWidth = 1; ctx.strokeRect(1.5, 1.5, LW - 3, LH - 3);
+  }
+  if (B.moveTo) { const x = B.moveTo.x - B.cam.x, y = B.moveTo.y - B.cam.y; ctx.strokeStyle = "#7affb0"; ctx.beginPath(); ctx.ellipse(x, y, 5, 2.5, 0, 0, Math.PI * 2); ctx.stroke(); }
 }
 
 function pixText(text, x, y, size, color, align = "center", weight = 700) {
@@ -681,8 +931,8 @@ function thaiText(text, x, y, size, color, align = "center") {
 
 function drawCutin(c) {
   const p = c.t / c.dur, ease = p < .2 ? p / .2 : p > .8 ? (1 - p) / .2 : 1;
-  ctx.fillStyle = `rgba(10,6,14,${.55 * ease})`; ctx.fillRect(0, 0, LW, LH);
-  const bandY = 48, bandH = 46;
+  ctx.fillStyle = `rgba(10,6,14,${.5 * ease})`; ctx.fillRect(0, 0, LW, LH);
+  const bandY = 52, bandH = 46;
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(0, bandY + 10); ctx.lineTo(LW, bandY - 4); ctx.lineTo(LW, bandY + bandH - 6); ctx.lineTo(0, bandY + bandH + 8); ctx.closePath();
@@ -716,24 +966,31 @@ function draw() {
   ctx.imageSmoothingEnabled = false;
   const sx = B.shake > 0 ? Math.round(rand(-1, 1)) : 0, sy = B.shake > 0 ? Math.round(rand(-1, 1)) : 0;
   ctx.save(); ctx.translate(sx, sy);
-  drawBg(WORLDS[worldOf(S.stage)].theme);
+  drawMap();
+  drawZones();
   [...B.heroes, ...B.foes].sort((a, b) => a.y - b.y).forEach(drawUnit);
+  const cx = B.cam.x, cy = B.cam.y;
   B.proj.forEach(p => {
-    const k = p.t / p.dur, x = p.x + (p.tx - p.x) * k, y = p.y + (p.ty - p.y) * k - Math.sin(k * Math.PI) * 6;
-    ctx.fillStyle = p.color; ctx.fillRect(Math.round(x) - 2, Math.round(y), 4, 1); ctx.fillStyle = "#fff"; ctx.fillRect(Math.round(x) + 1, Math.round(y), 1, 1);
+    const k = p.t / p.dur, x = p.x + (p.tx - p.x) * k - cx, y = p.y + (p.ty - p.y) * k - Math.sin(k * Math.PI) * 6 - cy;
+    if (p.orb) { ctx.fillStyle = "#160f1c"; ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4); ctx.fillStyle = p.color; ctx.fillRect(Math.round(x) - 1, Math.round(y) - 1, 2, 2); }
+    else { ctx.fillStyle = p.color; ctx.fillRect(Math.round(x) - 2, Math.round(y), 4, 1); ctx.fillStyle = "#fff"; ctx.fillRect(Math.round(x) + 1, Math.round(y), 1, 1); }
   });
   B.fx.forEach(p => {
+    const x = Math.round(p.x - cx), y = Math.round(p.y - cy);
     ctx.globalAlpha = 1 - p.t / p.life;
-    if (p.color === "chest") { const x = Math.round(p.x) - 4, y = Math.round(p.y); ctx.fillStyle = "#160f1c"; ctx.fillRect(x - 1, y - 1, 10, 8); ctx.fillStyle = "#a8743a"; ctx.fillRect(x, y, 8, 6); ctx.fillStyle = "#ffcb52"; ctx.fillRect(x, y + 2, 8, 1); ctx.fillRect(x + 3, y + 2, 2, 2); }
-    else { ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size); }
+    if (p.color === "chest") { ctx.fillStyle = "#160f1c"; ctx.fillRect(x - 5, y - 1, 10, 8); ctx.fillStyle = "#a8743a"; ctx.fillRect(x - 4, y, 8, 6); ctx.fillStyle = "#ffcb52"; ctx.fillRect(x - 4, y + 2, 8, 1); ctx.fillRect(x - 1, y + 2, 2, 2); }
+    else if (p.color === "slash") { ctx.strokeStyle = p.c; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 7, y - 6); ctx.lineTo(x + 7, y + 6); ctx.stroke(); ctx.strokeStyle = "#fff"; ctx.lineWidth = .6; ctx.stroke(); }
+    else { ctx.fillStyle = p.color; ctx.fillRect(x, y, p.size, p.size); }
   });
   ctx.globalAlpha = 1;
-  B.nums.forEach(n => { ctx.globalAlpha = n.t < .7 ? 1 : 1 - (n.t - .7) / .2; (/[ก-๙]/.test(n.text) ? thaiText : pixText)(n.text, n.x, n.y - n.t * 14, n.big ? 8 : 6, n.color); });
+  B.nums.forEach(n => { ctx.globalAlpha = n.t < .7 ? 1 : 1 - (n.t - .7) / .2; (/[ก-๙]/.test(n.text) ? thaiText : pixText)(n.text, n.x - cx, n.y - n.t * 14 - cy, n.big ? 8 : 6, n.color); });
   ctx.globalAlpha = 1;
   ctx.restore();
+  drawPointer();
+  drawHud();
   if (B.cutin) drawCutin(B.cutin);
   if (B.banner && !B.cutin) {
-    const b = B.banner, a = Math.min(1, b.t * 3), y0 = 52;
+    const b = B.banner, a = Math.min(1, b.t * 3), y0 = 56;
     ctx.globalAlpha = a;
     ctx.fillStyle = "rgba(10,6,14,.7)"; ctx.fillRect(0, y0, LW, b.sub ? 28 : 18);
     ctx.fillStyle = b.boss ? "#ff5a7a" : b.bad ? "#9a8aa8" : "#7affb0"; ctx.fillRect(0, y0, LW, 1); ctx.fillRect(0, y0 + (b.sub ? 28 : 18) - 1, LW, 1);
@@ -743,20 +1000,20 @@ function draw() {
   }
 }
 
-// ---------- Taps on the scene: focus a monster, or hammer a charging boss ----------
+// ---------- Taps on the scene ----------
 cv.addEventListener("pointerdown", e => {
   if (B.paused || B.state !== "fight") return;
   const r = cv.getBoundingClientRect();
-  const x = (e.clientX - r.left) / r.width * LW, y = (e.clientY - r.top) / r.height * LH;
+  const x = (e.clientX - r.left) / r.width * LW + B.cam.x, y = (e.clientY - r.top) / r.height * LH + B.cam.y;
   const f = foeAt(x, y);
-  B.fx.push({ x, y, vx: 0, vy: 0, t: 0, life: .15, color: "#7affb0", size: 2 });
-  if (!f) return;
-  if (f.charge) {
-    f.charge.gauge += f.charge.need * .12;
-    burst(x, y, "#ffd84a", 6, 1.2);
-    addNum(x, y - 4, "ตุ้บ!", "#ffd84a");
+  if (f) {
+    if (f.charge) { f.charge.gauge += f.charge.need * .12; burst(x, y, "#ffd84a", 6, 1.2); addNum(x, y - 4, "ตุ้บ!", "#ffd84a"); }
+    B.focus = f; B.moveTo = null;
+    ring(f.x, f.y, 8, "#7affb0", .3);
+  } else {
+    B.moveTo = { x: Math.max(EDGE, Math.min(MAP_W - EDGE, x)), y: Math.max(EDGE + 10, Math.min(MAP_H - EDGE, y)), t: 3 };
+    B.focus = null;
   }
-  B.focus = f;
   if (!S.tapTip) { S.tapTip = true; save(); renderPanel(); }
 });
 
@@ -782,8 +1039,7 @@ function updateWallet() {
 function renderStageInfo() {
   $("#stageLabel").textContent = stageName(S.stage);
   $("#worldName").textContent = WORLDS[worldOf(S.stage)].name;
-  $("#waveDots").innerHTML = Array.from({ length: WAVES_PER_STAGE }, (_, i) =>
-    `<i class="${i + 1 < B.wave ? "done" : i + 1 === B.wave ? "now" : ""} ${i + 1 === WAVES_PER_STAGE ? "boss" : ""}"></i>`).join("");
+  $("#waveDots").textContent = B.boss && !B.boss.dead ? "บอส!" : `${Math.min(B.kills, B.quota)}/${B.quota}`;
 }
 
 let partyKey = "";
@@ -798,21 +1054,27 @@ function renderParty(force) {
         <span class="pinfo">
           <span class="pname">${u.name}<em>${ROLE[HEROES[u.id].role].th}</em></span>
           <span class="bar hp"><i></i></span>
-          <span class="bar en"><i></i></span>
+          <span class="sk"><span class="bar en"><i></i></span><span class="bar en en2"><i></i></span></span>
         </span>
       </button>`).join("");
     el.querySelectorAll(".pcard").forEach(b => b.onclick = () => {
       const i = +b.dataset.i, u = B.heroes[i];
-      if (u.energy >= 100 && !u.dead) return castSkill(u);
-      toast(`${HEROES[u.id].skill.name}: เกจยังไม่เต็ม`);
+      if (u.dead) return toast(`${u.name} หมดแรง รอด่านหน้า`);
+      if ([1, 0].some(k => skillReady(u, k) && castSkill(u, k))) return;
+      const next = Math.min(...[0, 1].filter(k => skillUnlocked(u.id, k)).map(k => u.skillCd[k]));
+      toast(`สกิลพร้อมอีก ${Math.ceil(next)} วิ`);
     });
   }
   el.querySelectorAll(".pcard").forEach((b, i) => {
     const u = B.heroes[i];
     if (!u) return;
     b.querySelector(".hp i").style.width = (100 * u.hp / u.maxHp) + "%";
-    b.querySelector(".en i").style.width = u.energy + "%";
-    b.classList.toggle("ready", u.energy >= 100 && !u.dead);
+    const sks = HEROES[u.id].skills;
+    b.querySelectorAll(".en").forEach((bar, k) => {
+      bar.classList.toggle("locked", !skillUnlocked(u.id, k));
+      bar.querySelector("i").style.width = (100 * (1 - u.skillCd[k] / sks[k].cd)) + "%";
+    });
+    b.classList.toggle("ready", !u.dead && [0, 1].some(k => skillReady(u, k)));
     b.classList.toggle("down", u.dead);
   });
 }
@@ -848,7 +1110,7 @@ function advPanel() {
     </div>`;
   }).join("");
   return `
-    ${S.tapTip ? "" : `<div class="tip"><b>แตะที่มอน</b>เพื่อสั่งทั้งทีมรุมตีตัวนั้น ตอนบอสชาร์จท่าใหญ่<b>แตะบอสรัวๆ</b>ให้แถบสีทองเต็ม บอสจะมึนงงแทนที่จะถล่มทีมเรา</div>`}
+    ${S.tapTip ? "" : `<div class="tip"><b>แตะมอน</b>เพื่อสั่งรุม <b>แตะพื้น</b>เพื่อพาทีมเดินไปตรงนั้น ตอนบอสชาร์จ<b>หนีออกจากวงแดง</b> หรือแตะบอสรัวๆ ให้มึน</div>`}
     <div class="card">
       <div class="card-h"><span>${w.name}</span><span class="pill">ด่าน ${stageName(S.stage)}</span></div>
       <div class="kv"><span>ด่านไกลสุดที่ไปได้</span><b>${stageName(S.best)}</b></div>
@@ -895,7 +1157,7 @@ function gearRow(g, act = "gearItem", extra = "") {
   const d = GEAR[g.id];
   return `<button class="row btnrow" data-act="${act}" data-uid="${g.uid}" ${extra}>
     <span class="thumb icon r-${d.rarity}b">${imgTag(gearPic(g.id))}</span>
-    <span class="grow"><b>${d.name}</b> ${rar(d.rarity)}<br><small>${SLOT_TH[d.slot]} · Lv ${g.lv}/${GEAR_MAX_LV[d.rarity]} · ${statText(gearStats(g))}</small></span>
+    <span class="grow"><b>${g.plus ? `+${g.plus} ` : ""}${d.name}</b> ${rar(d.rarity)}<br><small>${SLOT_TH[d.slot]} · ${statText(gearStats(g))}</small></span>
     ${g.by ? `<span class="tag" style="--c:${HEROES[g.by].color}">${HEROES[g.by].name}</span>` : ""}
   </button>`;
 }
@@ -912,11 +1174,12 @@ let gearFilter = "all";
 function gearPanel() {
   const order = { SSR: 0, SR: 1, R: 2 };
   const items = S.gear.filter(g => gearFilter === "all" || GEAR[g.id].slot === gearFilter)
-    .sort((a, b) => order[GEAR[a.id].rarity] - order[GEAR[b.id].rarity] || b.lv - a.lv);
+    .sort((a, b) => order[GEAR[a.id].rarity] - order[GEAR[b.id].rarity] || b.plus - a.plus);
   const chips = ["all", "weapon", "armor", "charm"].map(k => `<button class="chip ${gearFilter === k ? "on" : ""}" data-act="gf" data-k="${k}">${k === "all" ? "ทั้งหมด" : SLOT_TH[k]}</button>`).join("");
   const spare = S.gear.filter(g => !g.by && GEAR[g.id].rarity === "R").length;
   return `
     <div class="chips">${chips}</div>
+    <label class="switch tight"><input type="checkbox" data-act="autoR" ${S.autoSalvageR ? "checked" : ""}><span></span>ของ R ที่ดรอปจากมอน ย่อยเป็นทองทันที</label>
     <div class="card">
       <div class="card-h"><span>อุปกรณ์ ${S.gear.length} ชิ้น</span>${spare ? `<button class="btn sm ghost" data-act="salvageR">ย่อย R ที่ไม่ได้ใส่ (${spare})</button>` : ""}</div>
       ${items.length ? items.map(g => gearRow(g)).join("") : `<p class="empty-note">ยังไม่มีอุปกรณ์ ไปสุ่มที่แท็บ "ชงเรียก" ได้เลย</p>`}
@@ -988,10 +1251,10 @@ function openSheet(html) {
 function closeSheet() { $("#sheet").classList.add("hidden"); $("#sheet").innerHTML = ""; }
 
 function heroSheet(id) {
-  const h = HEROES[id], o = S.heroes[id], st = heroStats(id), sk = h.skill;
+  const h = HEROES[id], o = S.heroes[id], st = heroStats(id);
   const slots = ["weapon", "armor", "charm"].map(slot => {
     const it = S.gear.find(x => x.by === id && GEAR[x.id].slot === slot);
-    return it ? `<button class="eq" data-act="pickGear" data-id="${id}" data-slot="${slot}">${imgTag(gearPic(it.id))}<small>${GEAR[it.id].name}<br>Lv ${it.lv}</small></button>`
+    return it ? `<button class="eq" data-act="pickGear" data-id="${id}" data-slot="${slot}">${imgTag(gearPic(it.id))}<small>${it.plus ? `+${it.plus} ` : ""}${GEAR[it.id].name}</small></button>`
               : `<button class="eq empty" data-act="pickGear" data-id="${id}" data-slot="${slot}">+<small>${SLOT_TH[slot]}</small></button>`;
   }).join("");
   const inTeam = S.team.indexOf(id);
@@ -1005,7 +1268,8 @@ function heroSheet(id) {
       <span>HP<b>${fmt(st.hp)}</b></span><span>โจมตี<b>${fmt(st.atk)}</b></span><span>ป้องกัน<b>${fmt(st.def)}</b></span>
       <span>คริ<b>${Math.round(st.crit * 100)}%</b></span><span>ความเร็ว<b>${Math.round(st.spd)}</b></span><span>พลัง<b>${fmt(heroPower(id))}</b></span>
     </div>
-    <div class="skill"><b>สกิล: ${sk.name}</b><small>${skillText(sk)}</small></div>
+    ${h.skills.map((sk, i) => `<div class="skill ${skillUnlocked(id, i) ? "" : "locked"}"><b>สกิล ${i + 1}: ${sk.name} <em>คูลดาวน์ ${sk.cd} วิ</em></b><small>${skillText(sk)}${skillUnlocked(id, i) ? "" : ` · ปลดล็อกที่ Lv ${SKILL2_LV}`}</small></div>`).join("")}
+    <div class="skill passive ${o.lv >= PASSIVE_LV ? "" : "locked"}"><b>ติดตัว: ${h.passive.name}</b><small>${h.passive.text}${o.lv >= PASSIVE_LV ? "" : ` · ปลดล็อกที่ Lv ${PASSIVE_LV}`}</small></div>
     <div class="eqs">${slots}</div>
     <div class="sheet-btns">
       ${lvButton(id)}
@@ -1016,43 +1280,59 @@ function heroSheet(id) {
 }
 function skillText(sk) {
   const pct = v => Math.round(v * 100) + "%";
-  let t = "";
-  if (sk.kind === "hit") t = `โจมตี${sk.target === "lowest" ? "ศัตรูที่ HP น้อยสุด" : sk.target === "random" ? "ศัตรูสุ่ม" : "ศัตรูตัวที่ใกล้สุด"} ${sk.hits > 1 ? sk.hits + " ครั้ง ครั้งละ " : ""}${pct(sk.mult)}`;
-  if (sk.kind === "aoe") t = `โจมตีศัตรูทุกตัว ${pct(sk.mult)}`;
-  if (sk.kind === "heal") t = `ฟื้น HP ทั้งทีม ${pct(sk.pct)}`;
-  if (sk.kind === "shield") t = `ให้โล่ทั้งทีม ${pct(sk.pct)} ของ HP ตัวเอง`;
-  if (sk.kind === "buff") t = "ปลุกใจทั้งทีม";
+  const el = sk.el === "fire" ? " ไฟ" : sk.el === "ice" ? " น้ำแข็ง" : "";
+  const each = sk.hits > 1 ? `${sk.hits} ครั้ง ครั้งละ ` : "";
+  let t = {
+    strike: () => `โจมตี${el}เป้าหมาย ${each}${pct(sk.mult)}`,
+    multi: () => `โจมตีศัตรูสุ่มรอบตัว ${each}${pct(sk.mult)}`,
+    lowest: () => `โจมตีศัตรูที่เลือดน้อยสุด ${each}${pct(sk.mult)}`,
+    blast: () => `ระเบิด${el}เป็นวงที่เป้าหมาย ${pct(sk.mult)}`,
+    rain: () => `ห่าฝนโจมตีเป็นวง ${sk.ticks} ครั้ง ครั้งละ ${pct(sk.mult)}`,
+    leap: () => `กระโดดใส่เป้าหมาย ระเบิด${el}เป็นวง ${pct(sk.mult)}`,
+    nova: () => `คลื่น${el}เป็นวงรอบ${sk.at === "target" ? "เป้าหมาย" : "ตัว"} ${sk.ticks > 1 ? sk.ticks + " ครั้ง ครั้งละ " : ""}${pct(sk.mult)}`,
+    heal: () => `ฟื้น HP ทั้งทีม ${pct(sk.pct)}${sk.shield ? ` และให้โล่ ${pct(sk.shield)}` : ""}`,
+    guard: () => `ให้โล่ทั้งทีม ${pct(sk.pct)} ของ HP ตัวเอง และยั่วศัตรูให้ตีตัวเอง ${sk.taunt} วิ`,
+    buff: () => "ปลุกใจทั้งทีม",
+    revive: () => `ชุบชีวิตเพื่อนที่ล้ม ฟื้น HP ${pct(sk.pct)}`,
+    clone: () => `เรียกร่างเงา ${sk.dur} วิ ตีซ้ำทุกครั้งแรง ${pct(sk.power)}`,
+  }[sk.kind]();
   if (sk.atk) t += ` · พลังโจมตีทั้งทีม +${pct(sk.atk)} ${sk.dur} วิ`;
-  if (sk.burn) t += ` · ติดไฟ ${sk.burn} วิ`;
-  if (sk.slow) t += ` · ทำให้ช้าลง ${sk.slow} วิ`;
+  if (sk.spd) t += ` · ตีเร็วขึ้น +${sk.spd} ${sk.dur} วิ`;
+  if (sk.cdr) t += ` · ลดคูลดาวน์สกิลทั้งทีม ${sk.cdr} วิ`;
+  if (sk.freeze) t += ` · แช่แข็ง ${sk.freeze} วิ`;
+  if (sk.stun) t += ` · มึนงง ${sk.stun} วิ`;
+  if (sk.mark) t += " · ทำเครื่องหมายล่า (โดนแรงขึ้น 30%)";
   if (sk.lifesteal) t += ` · ดูดเลือด ${pct(sk.lifesteal)}`;
-  if (sk.taunt) t += ` · ยั่วศัตรูให้ตีตัวเอง ${sk.taunt} วิ`;
   if (sk.crit) t += " · คริติคอลทุกครั้ง";
-  return t + " · เกจเต็มแล้วแตะการ์ดเพื่อใช้ (หรือเปิด AUTO)";
+  if (sk.el === "fire") t += " · ติดไฟ (ใส่ศัตรูที่แข็ง = ละลาย ×2)";
+  if (sk.el === "ice") t += " · หนาวสั่น (ใส่ศัตรูที่ติดไฟ = ไอน้ำระเบิด)";
+  return t;
 }
 
 function gearSheet(uid) {
   const g = S.gear.find(x => x.uid === uid);
   if (!g) return closeSheet();
-  const d = GEAR[g.id], max = GEAR_MAX_LV[d.rarity], cost = gearLvCost(g);
+  const d = GEAR[g.id], cost = plusCost(g), rate = PLUS_RATE[g.plus];
   const owners = Object.keys(S.heroes).map(id => `<button class="chip ${g.by === id ? "on" : ""}" data-act="equipTo" data-uid="${uid}" data-id="${id}">${HEROES[id].name}</button>`).join("");
   openSheet(`
     <div class="hero-head">
       <span class="big-pic icon r-${d.rarity}b">${imgTag(gearPic(g.id))}</span>
-      <div><b class="hname">${d.name}</b> ${rar(d.rarity)}<br><small>${SLOT_TH[d.slot]} · Lv ${g.lv}/${max}</small></div>
+      <div><b class="hname">${g.plus ? `+${g.plus} ` : ""}${d.name}</b> ${rar(d.rarity)}<br><small>${SLOT_TH[d.slot]} · ตีบวก ${g.plus}/${PLUS_MAX}</small></div>
     </div>
-    <div class="skill"><b>ค่าพลัง</b><small>${statText(gearStats(g))}</small>
-      ${g.lv < max ? `<small class="next">เลเวลถัดไป: ${statText(gearStats({ ...g, lv: g.lv + 1 }))}</small>` : ""}</div>
+    <div class="skill"><b>ค่าพลังหลัก</b><small>${statText(gearStats({ ...g, subs: [] }))}</small>
+      ${g.plus < PLUS_MAX ? `<small class="next">ถ้าตีบวกผ่าน: ${statText(gearStats({ ...g, plus: g.plus + 1, subs: [] }))}</small>` : ""}</div>
+    <div class="skill subs"><b>ค่าพลังเสริม (สุ่มตอนได้ของ)</b><small>${statText(Object.fromEntries(g.subs.map(s => [s.k, s.v])))}</small></div>
     <div class="card-h"><span>ใส่ให้</span></div>
     <div class="chips wrap">${owners}${g.by ? `<button class="chip" data-act="unequip" data-uid="${uid}">ถอดออก</button>` : ""}</div>
     <div class="sheet-btns">
-      ${g.lv < max ? `<button class="btn" data-act="gearLv" data-uid="${uid}" ${S.gold < cost ? "disabled" : ""}>อัพเลเวล <span class="coin"></span>${fmt(cost)}</button>` : `<button class="btn" disabled>เลเวลเต็มแล้ว</button>`}
+      ${g.plus < PLUS_MAX ? `<button class="btn gold" data-act="enhance" data-uid="${uid}" ${S.gold < cost ? "disabled" : ""}>ตีบวก +${g.plus + 1} · โอกาส ${Math.round(rate * 100)}% · <span class="coin"></span>${fmt(cost)}</button>` : `<button class="btn" disabled>ตีบวกเต็มแล้ว</button>`}
       <button class="btn ghost" data-act="salvage" data-uid="${uid}">ย่อยเป็นทอง ${fmt(gearSalvage(g))}</button>
-    </div>`);
+    </div>
+    <p class="hint">ตีบวกพลาดแล้วค่าบวกไม่ลด แค่เสียทอง</p>`);
 }
 
 function pickGearSheet(heroId, slot) {
-  const items = S.gear.filter(g => GEAR[g.id].slot === slot).sort((a, b) => (b.by === heroId) - (a.by === heroId) || RARITY[GEAR[b.id].rarity].mult - RARITY[GEAR[a.id].rarity].mult || b.lv - a.lv);
+  const items = S.gear.filter(g => GEAR[g.id].slot === slot).sort((a, b) => (b.by === heroId) - (a.by === heroId) || RARITY[GEAR[b.id].rarity].mult - RARITY[GEAR[a.id].rarity].mult || b.plus - a.plus);
   openSheet(`
     <div class="card-h"><span>เลือก${SLOT_TH[slot]}ให้ ${HEROES[heroId].name}</span><button class="btn sm ghost" data-act="hero" data-id="${heroId}">กลับ</button></div>
     ${items.length ? items.map(g => gearRow(g, "equipPick", `data-hero="${heroId}"`)).join("") : `<p class="empty-note">ยังไม่มี${SLOT_TH[slot]} ไปสุ่มที่ "กล่องของช่างตีเหล็ก" ได้เลย</p>`}`);
@@ -1100,6 +1380,7 @@ const ACT = {
     save(); refreshParty(); renderPanel();
   },
   autoNext: el => { S.autoNext = el.checked; save(); },
+  autoR: el => { S.autoSalvageR = el.checked; save(); },
   goBest: () => { S.stage = S.best; S.autoNext = true; save(); startStage(); renderPanel(); },
   hero: el => heroSheet(el.dataset.id),
   slot: el => {
@@ -1123,11 +1404,14 @@ const ACT = {
   gearItem: el => gearSheet(+el.dataset.uid),
   equipTo: el => { equip(+el.dataset.uid, el.dataset.id); save(); refreshParty(); gearSheet(+el.dataset.uid); renderPanel(); },
   unequip: el => { S.gear.find(x => x.uid === +el.dataset.uid).by = null; save(); refreshParty(); gearSheet(+el.dataset.uid); renderPanel(); },
-  gearLv: el => {
-    const g = S.gear.find(x => x.uid === +el.dataset.uid), c = gearLvCost(g);
-    if (S.gold < c) return toast("ทองไม่พอ");
-    S.gold -= c; g.lv++;
+  enhance: el => {
+    const g = S.gear.find(x => x.uid === +el.dataset.uid), c = plusCost(g);
+    if (S.gold < c || g.plus >= PLUS_MAX) return toast("ทองไม่พอ");
+    S.gold -= c;
+    const ok = Math.random() < PLUS_RATE[g.plus];
+    if (ok) g.plus++;
     save(); refreshParty(); gearSheet(g.uid); renderPanel();
+    flashEnhance(ok, g);
   },
   salvage: el => {
     const g = S.gear.find(x => x.uid === +el.dataset.uid);
@@ -1195,6 +1479,22 @@ function toast(msg, ms = 2200) {
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), ms);
 }
 
+// ---------- Loot popups ----------
+let dropT = 0;
+function showDrop(g) {
+  const d = GEAR[g.id], el = $("#drop");
+  el.className = `drop r-${d.rarity}b`;
+  el.innerHTML = `${d.rarity === "SSR" ? '<span class="rays"></span>' : ""}<span class="drop-pic">${imgTag(gearPic(g.id))}</span>
+    <span class="drop-body"><small>ได้ของจากมอน!</small><b>${d.name}</b>${rar(d.rarity)}<small>${statText(gearStats(g))}</small></span>`;
+  clearTimeout(dropT); dropT = setTimeout(() => { el.className = "drop hidden"; }, 3200);
+}
+function flashEnhance(ok, g) {
+  const el = $("#enhanceFx");
+  el.textContent = ok ? `สำเร็จ! +${g.plus}` : "พลาด…";
+  el.className = `enhance-fx ${ok ? "ok" : "fail"}`;
+  setTimeout(() => { el.className = "enhance-fx hidden"; }, 900);
+}
+
 // ---------- Gacha ----------
 function rollRarity(k) {
   S.pity[k]++;
@@ -1230,7 +1530,7 @@ function grantHero(r) {
 }
 function grantGear(r) {
   const id = pick(Object.keys(GEAR).filter(x => GEAR[x].rarity === r));
-  S.gear.push({ uid: S.uid++, id, lv: 1, by: null });
+  S.gear.push(newGear(id));
   return { kind: "gear", id, rarity: r, isNew: true };
 }
 
@@ -1322,7 +1622,8 @@ function boot() {
     say([
       { text: "ยินดีต้อนรับสู่ 'กิลด์ยามดึก' ร้านกาแฟที่เปิดเฉพาะตอนเมืองหลับ" },
       { text: "พอดึกปุ๊บ มอนสเตอร์ก็โผล่ออกมาจากตรอก นักผจญภัยของร้านเลยต้องออกไปปราบ" },
-      { text: "พวกเธอสู้กันเองได้ แต่ถ้าแตะที่มอน ทั้งทีมจะรุมตัวนั้น ตอนบอสชาร์จท่าใหญ่ให้แตะบอสรัวๆ นะ" },
+      { text: "พวกเธอเดินสำรวจและสู้กันเองได้ แตะมอนเพื่อสั่งรุม แตะพื้นเพื่อพาทีมเดินไปตรงนั้น" },
+      { text: "ล้มมอนครบจำนวนแล้วบอสจะโผล่ ตอนบอสชาร์จท่าจะมีวงแดงบนพื้น พาทีมหนีออกจากวง หรือแตะบอสรัวๆ ให้มึนก็ได้" },
       { text: "ทำภารกิจวันนี้ให้ครบจะได้เมล็ดกาแฟไว้ 'ชงเรียก' เพื่อนใหม่ ตอนนี้ให้ไว้ก่อน 3,000 เม็ด ลองดูสิ" },
       { who: "bell", text: HEROES.bell.line },
     ], true);
