@@ -45,6 +45,8 @@ body { user-select: none; -webkit-user-select: none; }
 button { font: inherit; color: inherit; cursor: pointer; }
 img.pix { image-rendering: pixelated; image-rendering: crisp-edges; }
 img.art { object-fit: contain; }
+/* small slots show the face of a generated portrait rather than the whole body */
+.pcard .pic img.art, .thumb:not(.icon) img.art, .slot img.art, .hcard img.art, .b-hero .banner-art img.art, .rcard img.art { object-fit: cover; object-position: 50% 8%; }
 code { font-family: ui-monospace, monospace; font-size: .85em; color: var(--neon); }
 
 #app { display: flex; flex-direction: column; height: 100dvh; max-width: 520px; margin: 0 auto; padding-top: env(safe-area-inset-top, 0px); }
